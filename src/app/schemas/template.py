@@ -19,9 +19,9 @@ class TemplateRead(TemplateBase):
     product_model_type: Annotated[str | None, Field(examples=["product_model_type name"])]
     connect_num: int
     element_num: int
-    update_user: int
+    update_user: int | None
     created_at: datetime
-    updated_at: datetime
+    updated_at: datetime | None
 
 
 class TemplateCreate(TemplateBase):
@@ -29,7 +29,7 @@ class TemplateCreate(TemplateBase):
 
 
 class TemplateCreateInternal(TemplateCreate):
-    update_user: int
+    update_user: int | None
 
 
 class TemplateUpdate(TemplateBase):
@@ -37,7 +37,7 @@ class TemplateUpdate(TemplateBase):
 
 
 class TemplateUpdateInternal(TemplateUpdate):
-    update_user: int
+    update_user: int | None
     updated_at: datetime
 
 
