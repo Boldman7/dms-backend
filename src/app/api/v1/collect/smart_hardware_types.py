@@ -1,4 +1,4 @@
-from typing import Annotated, Any, cast, List
+from typing import Annotated, List, cast
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
