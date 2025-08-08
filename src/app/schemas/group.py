@@ -14,9 +14,11 @@ class GroupBase(BaseModel):
 class Group(TimestampSchema, GroupBase, UUIDSchema, PersistentDeletion):
     pass
 
+
 class GroupRead(GroupBase):
     id: int
     protocol_id: Annotated[str | None, Field(examples=["protocol id"])]
+    
     update_user: int | None
     created_at: datetime
     updated_at: datetime | None

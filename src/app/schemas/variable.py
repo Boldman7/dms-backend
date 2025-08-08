@@ -21,8 +21,10 @@ class VariableBase(BaseModel):
 class Variable(TimestampSchema, VariableBase, UUIDSchema, PersistentDeletion):
     pass
 
+
 class VariableRead(VariableBase):
     id: int
+    
     update_user: int | None
     created_at: datetime
     updated_at: datetime | None

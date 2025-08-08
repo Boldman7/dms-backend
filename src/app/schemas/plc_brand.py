@@ -13,8 +13,10 @@ class PlcBrandBase(BaseModel):
 class PlcBrand(TimestampSchema, PlcBrandBase, UUIDSchema, PersistentDeletion):
     pass
 
+
 class PlcBrandRead(PlcBrandBase):
     id: int
+    
     update_user: int | None
     created_at: datetime
     updated_at: datetime | None

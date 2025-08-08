@@ -32,6 +32,7 @@ async def write_template(
     return cast(TemplateRead, template_read)
 
 
+# paginated response for templates
 @router.get("/templates", response_model=PaginatedListResponse[TemplateRead])
 async def read_templates(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)], page: int = 1, items_per_page: int = 10

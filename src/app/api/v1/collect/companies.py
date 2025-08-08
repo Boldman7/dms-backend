@@ -31,6 +31,7 @@ async def write_company(
     return cast(CompanyRead, company_read)
 
 
+# unpaginated response for companies
 @router.get("/companies", response_model=List[CompanyRead])
 async def read_companies(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]
@@ -75,6 +76,7 @@ async def erase_company(request: Request, id: int, db: Annotated[AsyncSession, D
     return {"message": "Company deleted"}
 
 
+# Hierarchical tree structure for companies
 @router.get("/companies/tree", response_model=List[CompanyTreeNode])
 async def read_companies_tree(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]

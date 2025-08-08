@@ -15,11 +15,13 @@ class PlcTypeBase(BaseModel):
 class PlcType(TimestampSchema, PlcTypeBase, UUIDSchema, PersistentDeletion):
     pass
 
+
 class PlcTypeRead(PlcTypeBase):
     id: int
     brand_id: int
     controller_id: str | None
     controller_name: str | None
+    
     update_user: int | None
     created_at: datetime
     updated_at: datetime | None

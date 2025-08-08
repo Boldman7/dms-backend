@@ -31,6 +31,7 @@ async def write_plc_type(
     return cast(PlcTypeRead, plc_type_read)
 
 
+# unpaginated response for plc_types
 @router.get("/plc-types", response_model=List[PlcTypeRead])
 async def read_plc_types(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]

@@ -31,6 +31,7 @@ async def write_smart_hardware_type(
     return cast(SmartHardwareTypeRead, smart_hardware_type_read)
 
 
+# unpaginated response for smart_hardware_types
 @router.get("/smart-hardware-types", response_model=List[SmartHardwareTypeRead])
 async def read_smart_hardware_types(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]

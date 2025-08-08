@@ -13,12 +13,14 @@ class TemplateBase(BaseModel):
 class Template(TimestampSchema, TemplateBase, UUIDSchema, PersistentDeletion):
     pass
 
+
 class TemplateRead(TemplateBase):
     id: int
     product_model: Annotated[str, Field(examples=["product_model name"])]
     product_model_type: Annotated[str | None, Field(examples=["product_model_type name"])]
     connect_num: int
     element_num: int
+
     update_user: int | None
     created_at: datetime
     updated_at: datetime | None

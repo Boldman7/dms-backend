@@ -32,6 +32,7 @@ async def write_variable(
     return cast(VariableRead, variable_read)
 
 
+# paginated response for variables
 @router.get("/variables", response_model=PaginatedListResponse[VariableRead])
 async def read_variables(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)], page: int = 1, items_per_page: int = 10

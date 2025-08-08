@@ -15,6 +15,7 @@ class SmartHardwareType(TimestampSchema, SmartHardwareTypeBase, UUIDSchema, Pers
 
 class SmartHardwareTypeRead(SmartHardwareTypeBase):
     id: int
+    
     update_user: int | None
     created_at: datetime
     updated_at: datetime | None

@@ -31,6 +31,7 @@ async def write_plc_brand(
     return cast(PlcBrandRead, plc_brand_read)
 
 
+# unpaginated response for plc_brands
 @router.get("/plc-brands", response_model=List[PlcBrandRead])
 async def read_plc_brands(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]

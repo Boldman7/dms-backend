@@ -31,6 +31,7 @@ async def write_group(
     return cast(GroupRead, group_read)
 
 
+# unpaginated response for groups
 @router.get("/groups", response_model=List[GroupRead])
 async def read_groups(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]

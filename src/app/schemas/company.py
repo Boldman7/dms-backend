@@ -20,8 +20,10 @@ class CompanyBase(BaseModel):
 class Company(TimestampSchema, CompanyBase, UUIDSchema, PersistentDeletion):
     pass
 
+
 class CompanyRead(CompanyBase):
     id: int
+
     update_user: int | None
     created_at: datetime
     updated_at: datetime | None
