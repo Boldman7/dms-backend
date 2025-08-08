@@ -17,7 +17,7 @@ class PlcType(TimestampSchema, PlcTypeBase, UUIDSchema, PersistentDeletion):
 
 class PlcTypeRead(PlcTypeBase):
     id: int
-    brand: int
+    brand_id: int
     controller_id: str | None
     controller_name: str | None
     update_user: int | None
