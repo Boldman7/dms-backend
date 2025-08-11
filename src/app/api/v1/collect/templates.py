@@ -48,7 +48,7 @@ async def write_template(
 
 
 # paginated response for templates
-@router.post("/templates", response_model=PaginatedListResponse[TemplateRead])
+@router.get("/templates", response_model=PaginatedListResponse[TemplateRead])
 async def read_templates(
     db: Annotated[AsyncSession, Depends(async_get_db)],
     name: str = Query(""),
