@@ -32,13 +32,14 @@ async def write_smart_hardware_type(
 
 
 # unpaginated response for smart_hardware_types
-@router.get("/smart-hardware-types", response_model=List[SmartHardwareTypeRead])
+@router.get("/smart-hardware-types")
 async def read_smart_hardware_types(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]
-) -> List[SmartHardwareTypeRead]:
+) -> dict[str, List[SmartHardwareTypeRead]]:
     smart_hardware_types_data = await crud_smart_hardware_types.get_multi(db=db, is_deleted=False)
 
-    return cast(List[SmartHardwareTypeRead], smart_hardware_types_data["data"])
+    response: dict[str, List[SmartHardwareTypeRead]] = {"data": cast(List[SmartHardwareTypeRead], smart_hardware_types_data["data"])}
+    return response
 
 
 @router.get("/smart-hardware-type/{id}", response_model=SmartHardwareTypeRead)

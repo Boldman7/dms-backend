@@ -4,6 +4,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 
 from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
+from ...schemas.collect.smart_hardware_type import SmartHardwareTypeRead
 
 
 class TemplateBase(BaseModel):
@@ -16,7 +17,8 @@ class Template(TimestampSchema, TemplateBase, UUIDSchema, PersistentDeletion):
 
 class TemplateRead(TemplateBase):
     id: int
-    smart_hardware_type_id: int
+    # smart_hardware_type_id: int
+    smart_hardware_type: SmartHardwareTypeRead
 
     update_user: int | None
     created_at: datetime
