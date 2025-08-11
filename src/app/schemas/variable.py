@@ -10,11 +10,11 @@ class VariableBase(BaseModel):
     name: Annotated[str, Field(examples=["variable name"])]
     data_type: Annotated[int, Field(examples=[0, 1, 2, 3, 4, 5])]
     base_type: Annotated[int, Field(examples=[0, 1])]
-    address: Annotated[str, Field(examples="variable address")]
+    address: Annotated[str, Field(examples=["variable address"])]
     transmission_mode: Annotated[int, Field(examples=[0, 1])]
     rw_mode: Annotated[int, Field(examples=[0, 1])]
-    unit: Annotated[str | None, Field(examples="variable unit")]
-    description: Annotated[str | None, Field(examples="variable description")]
+    unit: Annotated[str | None, Field(examples=["variable unit"])]
+    description: Annotated[str | None, Field(examples=["variable description"])]
     group_id: int
 
 
