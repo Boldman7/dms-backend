@@ -91,20 +91,20 @@ async def read_companies_tree(
     # Convert to CompanyTreeNode objects
     company_nodes = {}
     for company in all_companies:
-        company_nodes[company.id] = CompanyTreeNode(
-            id=company.id,
-            name=company.name,
-            parent_id=company.parent_id,
-            province=company.province,
-            city=company.city,
-            area=company.area,
-            address=company.address,
-            email=company.email,
-            officePhone=company.officePhone,
-            isEndUser=company.isEndUser,
-            update_user=company.update_user,
-            created_at=company.created_at,
-            updated_at=company.updated_at,
+        company_nodes[company["id"]] = CompanyTreeNode(
+            id=company["id"],
+            name=company["name"],
+            parent_id=company["parent_id"],
+            province=company["province"],
+            city=company["city"],
+            area=company["area"],
+            address=company["address"],
+            email=company["email"],
+            officePhone=company["officePhone"],
+            isEndUser=company["isEndUser"],
+            update_user=company["update_user"],
+            created_at=company["created_at"],
+            updated_at=company["updated_at"],
             children=[]
         )
     
