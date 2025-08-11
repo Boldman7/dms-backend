@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_plc_brands import crud_plc_brands
-from ....schemas.plc_brand import PlcBrandCreate, PlcBrandCreateInternal, PlcBrandRead, PlcBrandUpdate
+from ....schemas.collect.plc_brand import PlcBrandCreate, PlcBrandCreateInternal, PlcBrandRead, PlcBrandUpdate
 
 router = APIRouter(tags=["plc_brands"])
 

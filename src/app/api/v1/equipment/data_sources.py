@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.equipment.crud_data_sources import crud_data_sources
-from ....schemas.data_source import DataSourceCreate, DataSourceCreateInternal, DataSourceRead, DataSourceUpdate
+from ....schemas.equipment.data_source import DataSourceCreate, DataSourceCreateInternal, DataSourceRead, DataSourceUpdate
 
 router = APIRouter(tags=["data_sources"])
 

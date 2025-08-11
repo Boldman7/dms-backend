@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_smart_hardware_types import crud_smart_hardware_types
-from ....schemas.smart_hardware_type import SmartHardwareTypeCreate, SmartHardwareTypeCreateInternal, SmartHardwareTypeRead, SmartHardwareTypeUpdate
+from ....schemas.collect.smart_hardware_type import SmartHardwareTypeCreate, SmartHardwareTypeCreateInternal, SmartHardwareTypeRead, SmartHardwareTypeUpdate
 
 router = APIRouter(tags=["smart_hardware_types"])
 

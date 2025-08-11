@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_templates import crud_templates
-from ....schemas.template import TemplateCreate, TemplateCreateInternal, TemplateRead, TemplateUpdate
+from ....schemas.collect.template import TemplateCreate, TemplateCreateInternal, TemplateRead, TemplateUpdate
 
 router = APIRouter(tags=["templates"])
 

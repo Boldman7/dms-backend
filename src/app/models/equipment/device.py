@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 from sqlalchemy import DateTime, String, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from ..core.db.database import Base
+from ...core.db.database import Base
 
 
 class Device(Base):

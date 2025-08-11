@@ -3,7 +3,7 @@ from typing import Annotated, List
 
 from pydantic import BaseModel, Field
 
-from ..core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
+from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 
 
 class ProductGroupBase(BaseModel):

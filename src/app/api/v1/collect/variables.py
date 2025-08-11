@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_variables import crud_variables
-from ....schemas.variable import VariableCreate, VariableCreateInternal, VariableRead, VariableUpdate
+from ....schemas.collect.variable import VariableCreate, VariableCreateInternal, VariableRead, VariableUpdate
 
 router = APIRouter(tags=["variables"])
 

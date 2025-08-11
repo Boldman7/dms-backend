@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.equipment.crud_devices import crud_devices
-from ....schemas.device import DeviceCreate, DeviceCreateInternal, DeviceRead, DeviceUpdate
+from ....schemas.equipment.device import DeviceCreate, DeviceCreateInternal, DeviceRead, DeviceUpdate
 
 router = APIRouter(tags=["devices"])
 

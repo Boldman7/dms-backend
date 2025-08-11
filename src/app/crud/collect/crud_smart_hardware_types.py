@@ -1,7 +1,7 @@
 from fastcrud import FastCRUD
 
-from ...models.smart_hardware_type import SmartHardwareType
-from ...schemas.smart_hardware_type import SmartHardwareTypeCreateInternal, SmartHardwareTypeDelete, SmartHardwareTypeRead, SmartHardwareTypeUpdate, SmartHardwareTypeUpdateInternal
+from ...models.collect.smart_hardware_type import SmartHardwareType
+from ...schemas.collect.smart_hardware_type import SmartHardwareTypeCreateInternal, SmartHardwareTypeDelete, SmartHardwareTypeRead, SmartHardwareTypeUpdate, SmartHardwareTypeUpdateInternal
 
 CRUDSmartHardwareType = FastCRUD[SmartHardwareType, SmartHardwareTypeCreateInternal, SmartHardwareTypeUpdate, SmartHardwareTypeUpdateInternal, SmartHardwareTypeDelete, SmartHardwareTypeRead]
 crud_smart_hardware_types = CRUDSmartHardwareType(SmartHardwareType)

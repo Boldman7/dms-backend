@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_plc_types import crud_plc_types
-from ....schemas.plc_type import PlcTypeCreate, PlcTypeCreateInternal, PlcTypeRead, PlcTypeUpdate
+from ....schemas.collect.plc_type import PlcTypeCreate, PlcTypeCreateInternal, PlcTypeRead, PlcTypeUpdate
 
 router = APIRouter(tags=["plc_types"])
 

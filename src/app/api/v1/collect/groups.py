@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_groups import crud_groups
-from ....schemas.group import GroupCreate, GroupCreateInternal, GroupRead, GroupUpdate
+from ....schemas.collect.group import GroupCreate, GroupCreateInternal, GroupRead, GroupUpdate
 
 router = APIRouter(tags=["groups"])
 
