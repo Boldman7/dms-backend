@@ -16,10 +16,7 @@ class Template(TimestampSchema, TemplateBase, UUIDSchema, PersistentDeletion):
 
 class TemplateRead(TemplateBase):
     id: int
-    product_model: Annotated[str, Field(examples=["product_model name"])]
-    product_model_type: Annotated[str | None, Field(examples=["product_model_type name"])]
-    connect_num: int
-    element_num: int
+    smart_hardware_type_id: int
 
     update_user: int | None
     created_at: datetime
@@ -27,7 +24,7 @@ class TemplateRead(TemplateBase):
 
 
 class TemplateCreate(TemplateBase):
-    product_model: Annotated[str | None, Field(default=None, examples=["product model"])]
+    smart_hardware_type_id: int
 
 
 class TemplateCreateInternal(TemplateCreate):

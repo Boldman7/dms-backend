@@ -11,10 +11,7 @@ class Template(Base):
 
     id: Mapped[int] = mapped_column("id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False)
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    product_model: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
-    product_model_type: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
-    connect_num: Mapped[int] = mapped_column(Integer, default=0)
-    element_num: Mapped[int] = mapped_column(Integer, default=0)
+    smart_hardware_type_id: Mapped[int] = mapped_column(ForeignKey("smart_hardware_type.id"), index=True, nullable=False)
     
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
 
