@@ -8,6 +8,7 @@ import redis.asyncio as redis
 from arq import create_pool
 from arq.connections import RedisSettings
 from fastapi import APIRouter, Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 
@@ -202,6 +203,17 @@ def create_application(
 
     application = FastAPI(lifespan=lifespan, **kwargs)
     application.include_router(router)
+
+    # Add CORS middleware for development environments
+    if isinstance(settings, EnvironmentSettings):
+        if settings.ENVIRONMENT in [EnvironmentOption.LOCAL, EnvironmentOption.STAGING]:
+            application.add_middleware(
+                CORSMiddleware,
+                allow_origins=["*"],  # Allows all origins in development
+                allow_credentials=True,
+                allow_methods=["*"],  # Allows all methods
+                allow_headers=["*"],  # Allows all headers
+            )
 
     if isinstance(settings, ClientSideCacheSettings):
         application.add_middleware(ClientCacheMiddleware, max_age=settings.CLIENT_CACHE_MAX_AGE)
