@@ -8,14 +8,14 @@ from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 
 class CompanyBase(BaseModel):
     name: Annotated[str, Field(examples=["company name"])]
-    parent_id: int | None
-    province: str | None
-    city: str | None
-    area: str | None
-    address: str | None
-    email: str | None
-    officePhone: str | None
-    isEndUser: int
+    parent_id: int | None = None
+    province: str | None = None
+    city: str | None = None
+    area: str | None = None
+    address: str | None = None
+    email: str | None = None
+    officePhone: str | None = None
+    isEndUser: int | None = None
 
 class Company(TimestampSchema, CompanyBase, UUIDSchema, PersistentDeletion):
     pass

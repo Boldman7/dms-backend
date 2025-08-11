@@ -32,13 +32,14 @@ async def write_company(
 
 
 # unpaginated response for companies
-@router.get("/companies", response_model=List[CompanyRead])
+@router.get("/companies", response_model=dict[str, List[CompanyRead]])
 async def read_companies(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> List[CompanyRead]:
     companies_data = await crud_companies.get_multi(db=db, is_deleted=False)
 
-    return cast(List[CompanyRead], companies_data["data"])
+    response: dict[str, List[CompanyRead]] = {"data": cast(List[CompanyRead], companies_data["data"])}
+    return response
 
 
 @router.get("/company/{id}", response_model=CompanyRead)
@@ -77,7 +78,7 @@ async def erase_company(request: Request, id: int, db: Annotated[AsyncSession, D
 
 
 # Hierarchical tree structure for companies
-@router.get("/companies/tree", response_model=List[CompanyTreeNode])
+@router.get("/companies/tree", response_model=dict[str, List[CompanyTreeNode]])
 async def read_companies_tree(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> List[CompanyTreeNode]:
@@ -120,4 +121,5 @@ async def read_companies_tree(
             if parent:
                 parent.children.append(company_node)
     
-    return root_companies
+    response: dict[str, List[CompanyTreeNode]] = {"data": cast(List[CompanyTreeNode], root_companies)}
+    return response
