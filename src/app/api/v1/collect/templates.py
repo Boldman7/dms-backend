@@ -1,4 +1,5 @@
 from typing import Annotated, Any, cast
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Request, Query
 from fastcrud.paginated import PaginatedListResponse, compute_offset, paginated_response
@@ -20,10 +21,13 @@ async def write_template(
     request: Request, template: TemplateCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> TemplateRead:
     template_internal_dict = template.model_dump()
-    db_template = await crud_templates.exists(db=db, name=template_internal_dict["name"])
+    db_template = await crud_templates.get(db=db, name=template_internal_dict["name"])
     if db_template:
-        raise DuplicateValueException("Template Name not available")
-
+        if db_template["is_deleted"]:
+            await crud_templates.db_delete(db=db, id=db_template["id"])
+        else:
+            raise DuplicateValueException("Template Name not available")
+        
     template_internal_dict["update_user"] = None
     template_internal = TemplateCreateInternal(**template_internal_dict)
     created_template = await crud_templates.create(db=db, object=template_internal)
