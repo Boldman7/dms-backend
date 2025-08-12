@@ -13,10 +13,10 @@ class SmartHardware(Base):
     code: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     company_id: Mapped[int] = mapped_column(ForeignKey("company.id"), index=True, nullable=False)
-    location_way: Mapped[int] = mapped_column(Integer, nullable=False)
-    sync_status: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    location_way: Mapped[bool] = mapped_column(Integer, nullable=False)
+    sync_status: Mapped[int] = mapped_column(Integer, nullable=False, default=2)
     status: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
-    upgrade_status: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    upgrade_status: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     template_id: Mapped[int | None] = mapped_column(ForeignKey("template.id"), index=True, nullable=True, default=None)
     smart_hardware_type_id: Mapped[int | None] = mapped_column(ForeignKey("smart_hardware_type.id"), index=True, nullable=True, default=None)
     

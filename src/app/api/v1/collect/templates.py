@@ -36,9 +36,9 @@ async def write_template(
         db=db,
         id=created_template.id,
         join_model=SmartHardwareType,
+        join_schema_to_select=SmartHardwareTypeRead,
         nest_joins=True,
         schema_to_select=TemplateRead,
-        join_schema_to_select=SmartHardwareTypeRead,
         is_deleted=False,
     )
     if template_read is None:
@@ -58,9 +58,9 @@ async def read_templates(
     templates_data = await crud_templates.get_multi_joined(
         db=db,
         join_model=SmartHardwareType,
+        join_schema_to_select=SmartHardwareTypeRead,
         nest_joins=True,
         schema_to_select=TemplateRead,
-        join_schema_to_select=SmartHardwareTypeRead,
         offset=compute_offset(page, items_per_page),
         limit=items_per_page,
         name__contains=name,
@@ -77,9 +77,9 @@ async def read_template(request: Request, id: int, db: Annotated[AsyncSession, D
         db=db,
         id=id,
         join_model=SmartHardwareType,
+        join_schema_to_select=SmartHardwareTypeRead,
         nest_joins=True,
         schema_to_select=TemplateRead,
-        join_schema_to_select=SmartHardwareTypeRead,
         is_deleted=False,
     )
     if db_template is None:

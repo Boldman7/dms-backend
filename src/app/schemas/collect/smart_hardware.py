@@ -4,12 +4,13 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 
 from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
+from ...schemas.collect.company import CompanyRead
 
 
 class SmartHardwareBase(BaseModel):
     name: Annotated[str, Field(examples=["smart hardware name"])]
     company_id: int
-    location_way: int
+    location_way: bool
 
 
 class SmartHardware(TimestampSchema, SmartHardwareBase, UUIDSchema, PersistentDeletion):
@@ -18,11 +19,11 @@ class SmartHardware(TimestampSchema, SmartHardwareBase, UUIDSchema, PersistentDe
 
 class SmartHardwareRead(SmartHardwareBase):
     id: int
+    code: Annotated[str, Field(examples=["smart hardware code"])]
+    company: CompanyRead
     template_id: int | None
     smart_hardware_type_id: int | None
     sync_status: int | None
-    status: int | None
-    upgrade_status: int | None
 
     update_user: int | None
     created_at: datetime
@@ -31,6 +32,8 @@ class SmartHardwareRead(SmartHardwareBase):
 
 class SmartHardwareCreate(SmartHardwareBase):
     code: Annotated[str, Field(examples=["smart hardware code"])]
+    status: int = 2
+    upgrade_status: int = 0
 
 
 class SmartHardwareCreateInternal(SmartHardwareCreate):

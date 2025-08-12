@@ -1,6 +1,6 @@
 from typing import Annotated, Any, cast
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from fastcrud.paginated import PaginatedListResponse, compute_offset, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,6 +8,8 @@ from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_smart_hardwares import crud_smart_hardwares
 from ....schemas.collect.smart_hardware import SmartHardwareCreate, SmartHardwareCreateInternal, SmartHardwareRead, SmartHardwareUpdate
+from ....schemas.collect.company import CompanyRead
+from ....models.collect.company import Company
 
 router = APIRouter(tags=["smart_hardwares"])
 
@@ -25,7 +27,14 @@ async def write_smart_hardware(
     smart_hardware_internal = SmartHardwareCreateInternal(**smart_hardware_internal_dict)
     created_smart_hardware = await crud_smart_hardwares.create(db=db, object=smart_hardware_internal)
 
-    smart_hardware_read = await crud_smart_hardwares.get(db=db, id=created_smart_hardware.id, schema_to_select=SmartHardwareRead)
+    smart_hardware_read = await crud_smart_hardwares.get_joined(
+        db=db,
+        id=created_smart_hardware.id,
+        join_model=Company,
+        join_schema_to_select=CompanyRead,
+        nest_joins=True,
+        schema_to_select=SmartHardwareRead
+    )
     if smart_hardware_read is None:
         raise NotFoundException("Created smart_hardware not found")
 
@@ -35,9 +44,22 @@ async def write_smart_hardware(
 # paginated response for smart_hardwares
 @router.get("/smart-hardwares", response_model=PaginatedListResponse[SmartHardwareRead])
 async def read_smart_hardwares(
-    request: Request, db: Annotated[AsyncSession, Depends(async_get_db)], page: int = 1, items_per_page: int = 10
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    keyword: str = Query(""),
+    page: int | None = Query(1),
+    items_per_page: int | None = Query(10)
 ) -> dict:
-    smart_hardwares_data = await crud_smart_hardwares.get_multi(db=db, offset=compute_offset(page, items_per_page), limit=items_per_page, is_deleted=False,)
+    smart_hardwares_data = await crud_smart_hardwares.get_multi_joined(
+        db=db,
+        join_model=Company,
+        join_schema_to_select=CompanyRead,
+        nest_joins=True,
+        schema_to_select=SmartHardwareRead,
+        offset=compute_offset(page, items_per_page),
+        limit=items_per_page,
+        name__contains=keyword,
+        is_deleted=False,
+    )
 
     response: dict[str, Any] = paginated_response(crud_data=smart_hardwares_data, page=page, items_per_page=items_per_page)
     return response
@@ -45,7 +67,15 @@ async def read_smart_hardwares(
 
 @router.get("/smart-hardware/{id}", response_model=SmartHardwareRead)
 async def read_smart_hardware(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> SmartHardwareRead:
-    db_smart_hardware = await crud_smart_hardwares.get(db=db, id=id, is_deleted=False, schema_to_select=SmartHardwareRead)
+    db_smart_hardware = await crud_smart_hardwares.get_joined(
+        db=db,
+        id=id,
+        join_model=Company,
+        join_schema_to_select=CompanyRead,
+        nest_joins=True,
+        schema_to_select=SmartHardwareRead,
+        is_deleted=False,
+    )
     if db_smart_hardware is None:
         raise NotFoundException("SmartHardware not found")
 
