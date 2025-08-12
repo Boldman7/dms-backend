@@ -4,12 +4,11 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends, Request, Query
 from fastcrud.paginated import PaginatedListResponse, compute_offset, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
-from ....models.collect.template import Template
 
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_templates import crud_templates
-from ....schemas.collect.template import TemplateCreate, TemplateCreateInternal, TemplateRead, TemplateUpdate
+from ....schemas.collect.template import TemplateCreate, TemplateCreateInternal, TemplateRead, TemplateUpdate, TemplateCopy, TemplateCopyInternal
 from ....schemas.collect.smart_hardware_type import SmartHardwareTypeRead
 from ....models.collect.smart_hardware_type import SmartHardwareType
 
@@ -102,6 +101,31 @@ async def patch_template(
 
     await crud_templates.update(db=db, object=values, id=id)
     return {"message": "Template updated"}
+
+
+@router.post("/template/{id}/copy")
+async def copy_template(
+    request: Request, id: int, template: TemplateCopy, db: Annotated[AsyncSession, Depends(async_get_db)]
+) -> dict[str, str]:
+    old_template = await crud_templates.get(db=db, id=id, schema_to_select=TemplateRead)
+    if old_template is None:
+        raise NotFoundException("Template not found")
+
+    template_internal_dict = template.model_dump()
+    same_name_template = await crud_templates.get(db=db, name=template_internal_dict["name"])
+    if same_name_template:
+        if same_name_template["is_deleted"]:
+            await crud_templates.db_delete(db=db, id=same_name_template["id"])
+        else:
+            raise DuplicateValueException("Template Name not available")
+
+
+    old_template["name"] = template_internal_dict["name"]
+    old_template["smart_hardware_type_id"] = template_internal_dict["smart_hardware_type_id"]
+    template_internal = TemplateCopyInternal(**old_template)
+    await crud_templates.create(db=db, object=template_internal)
+
+    return {"message": "Template copied"}
 
 
 @router.delete("/template/{id}")

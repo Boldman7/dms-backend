@@ -42,6 +42,14 @@ class TemplateUpdateInternal(TemplateUpdate):
     updated_at: datetime
 
 
+class TemplateCopy(TemplateBase):
+    smart_hardware_type_id: int
+
+
+class TemplateCopyInternal(TemplateCopy):
+    update_user: int | None
+
+
 class TemplateDelete(BaseModel):
     is_deleted: bool
     deleted_at: datetime
