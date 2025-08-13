@@ -1,6 +1,6 @@
 from typing import Annotated, List, cast
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.db.database import async_get_db
@@ -43,16 +43,28 @@ async def write_connection(
 # unpaginated response for connections
 @router.get("/connections", response_model=dict[str, List[ConnectionRead]])
 async def read_connections(
-    request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    template_id: int = Query(None)
 ) -> dict[str, List[ConnectionRead]]:
-    connections_data = await crud_connections.get_multi_joined(
-        db=db,
-        join_model=PlcType,
-        join_schema_to_select=PlcTypeRead,
-        nest_joins=True,
-        schema_to_select=ConnectionRead,
-        is_deleted=False
-    )
+    if template_id:
+        connections_data = await crud_connections.get_multi_joined(
+            db=db,
+            template_id=template_id,
+            join_model=PlcType,
+            join_schema_to_select=PlcTypeRead,
+            nest_joins=True,
+            schema_to_select=ConnectionRead,
+            is_deleted=False
+        )
+    else:
+        connections_data = await crud_connections.get_multi_joined(
+            db=db,
+            join_model=PlcType,
+            join_schema_to_select=PlcTypeRead,
+            nest_joins=True,
+            schema_to_select=ConnectionRead,
+            is_deleted=False
+        )
     response: dict[str, List[ConnectionRead]] = {"data": cast(List[ConnectionRead], connections_data["data"])}
     return response
 
