@@ -9,7 +9,6 @@ from .plc_type import PlcTypeRead
 
 class ConnectionBase(BaseModel):
     name: Annotated[str, Field(examples=["connection name"])]
-    template_id: int
     plc_type_id: int
     ip_address: str | None = None
     port: int | None = None
@@ -29,7 +28,7 @@ class ConnectionRead(ConnectionBase):
 
 
 class ConnectionCreate(ConnectionBase):
-    pass
+    template_id: int
 
 
 class ConnectionCreateInternal(ConnectionCreate):
