@@ -21,6 +21,8 @@ services:
     volumes:
       - ./src/app:/code/app
       - ./src/.env:/code/.env
+      - ./src:/code/src
+      - ./src/alembic.ini:/code/alembic.ini
 
   worker:
     build:
