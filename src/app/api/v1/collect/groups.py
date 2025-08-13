@@ -1,6 +1,6 @@
 from typing import Annotated, List, cast
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.db.database import async_get_db
@@ -16,10 +16,6 @@ async def write_group(
     request: Request, group: GroupCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> GroupRead:
     group_internal_dict = group.model_dump()
-    db_group = await crud_groups.exists(db=db, name=group_internal_dict["name"])
-    if db_group:
-        raise DuplicateValueException("Group Name not available")
-
     group_internal_dict["update_user"] = None
     group_internal = GroupCreateInternal(**group_internal_dict)
     created_group = await crud_groups.create(db=db, object=group_internal)
@@ -32,13 +28,19 @@ async def write_group(
 
 
 # unpaginated response for groups
-@router.get("/groups", response_model=List[GroupRead])
+@router.get("/groups", response_model=dict[str, List[GroupRead]])
 async def read_groups(
-    request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]
-) -> List[GroupRead]:
-    groups_data = await crud_groups.get_multi(db=db, is_deleted=False)
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    name: str = Query("")
+) -> dict[str, List[GroupRead]]:
+    groups_data = await crud_groups.get_multi(
+        db=db,
+        name__contains=name,
+        is_deleted=False
+    )
 
-    return cast(List[GroupRead], groups_data["data"])
+    response: dict[str, List[GroupRead]] = {"data": cast(List[GroupRead], groups_data["data"])}
+    return response
 
 
 @router.get("/group/{id}", response_model=GroupRead)
@@ -57,10 +59,6 @@ async def patch_group(
     db_group = await crud_groups.get(db=db, id=id, schema_to_select=GroupRead)
     if db_group is None:
         raise NotFoundException("Group not found")
-
-    existing_group = await crud_groups.exists(db=db, name=values.name)
-    if existing_group:
-        raise DuplicateValueException("Group Name not available")
 
     await crud_groups.update(db=db, object=values, id=id)
     return {"message": "Group updated"}

@@ -10,7 +10,7 @@ class Group(Base):
     __tablename__ = "group"
 
     id: Mapped[int] = mapped_column("id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False)
-    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
     is_control: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     protocol_id: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     
