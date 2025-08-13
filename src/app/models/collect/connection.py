@@ -14,8 +14,8 @@ class Connection(Base):
     template_id: Mapped[int] = mapped_column(ForeignKey("template.id"), index=True, nullable=False)
     plc_type_id: Mapped[int] = mapped_column(ForeignKey("plc_type.id"), index=True, nullable=False)
     ip_address: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
-    port: Mapped[int | None] = mapped_column(String, nullable=True, default=None)
-    station_number: Mapped[int | None] = mapped_column(String, nullable=True, default=None)
+    port: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    station_number: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
 

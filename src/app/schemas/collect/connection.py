@@ -4,6 +4,7 @@ from typing import Annotated, List
 from pydantic import BaseModel, Field
 
 from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
+from .plc_type import PlcTypeRead
 
 
 class ConnectionBase(BaseModel):
@@ -12,7 +13,7 @@ class ConnectionBase(BaseModel):
     plc_type_id: int
     ip_address: str | None = None
     port: int | None = None
-    station_number: int | None = None
+    station_number: str | None = None
 
 class Connection(TimestampSchema, ConnectionBase, UUIDSchema, PersistentDeletion):
     pass
@@ -20,6 +21,7 @@ class Connection(TimestampSchema, ConnectionBase, UUIDSchema, PersistentDeletion
 
 class ConnectionRead(ConnectionBase):
     id: int
+    plc_type: PlcTypeRead
 
     update_user: int | None
     created_at: datetime

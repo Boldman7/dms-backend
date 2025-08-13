@@ -103,6 +103,7 @@ async def read_companies_tree(
                     id=plc_type["id"],
                     name=plc_type["name"],
                     plc_brand_id=plc_type["plc_brand_id"],
+                    interface_type=plc_type["interface_type"],
                     controller_id=plc_type["controller_id"],
                     controller_name=plc_type["controller_name"],
                     update_user=plc_type["update_user"],

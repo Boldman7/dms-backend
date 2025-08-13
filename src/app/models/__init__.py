@@ -11,6 +11,7 @@ from .collect.smart_hardware_type import SmartHardwareType
 from .collect.smart_hardware import SmartHardware
 from .collect.template import Template
 from .collect.variable import Variable
+from .collect.connection import Connection
 
 from .equipment.data_source import DataSource
 from .equipment.device import Device

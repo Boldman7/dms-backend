@@ -8,8 +8,10 @@ from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 
 class PlcTypeBase(BaseModel):
     name: Annotated[str, Field(examples=["plc type name"])]
+    plc_brand_id: int
     controller_id: str | None = None
     controller_name: str | None = None
+    interface_type: int
 
 
 class PlcType(TimestampSchema, PlcTypeBase, UUIDSchema, PersistentDeletion):
@@ -21,6 +23,7 @@ class PlcTypeRead(PlcTypeBase):
     plc_brand_id: int
     controller_id: str | None
     controller_name: str | None
+    interface_type: int
     
     update_user: int | None
     created_at: datetime
@@ -28,7 +31,7 @@ class PlcTypeRead(PlcTypeBase):
 
 
 class PlcTypeCreate(PlcTypeBase):
-    plc_brand_id: int
+    pass
 
 
 class PlcTypeCreateInternal(PlcTypeCreate):
