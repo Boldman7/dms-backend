@@ -32,13 +32,14 @@ async def write_plc_brand(
 
 
 # unpaginated response for plc_brands
-@router.get("/plc-brands", response_model=List[PlcBrandRead])
+@router.get("/plc-brands", response_model=dict[str, List[PlcBrandRead]])
 async def read_plc_brands(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> List[PlcBrandRead]:
     plc_brands_data = await crud_plc_brands.get_multi(db=db, is_deleted=False)
 
-    return cast(List[PlcBrandRead], plc_brands_data["data"])
+    response: dict[str, List[PlcBrandRead]] = {"data": cast(List[PlcBrandRead], plc_brands_data["data"])}
+    return response
 
 
 @router.get("/plc-brand/{id}", response_model=PlcBrandRead)

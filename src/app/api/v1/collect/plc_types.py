@@ -6,7 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_plc_types import crud_plc_types
+from ....crud.collect.crud_plc_brands import crud_plc_brands
 from ....schemas.collect.plc_type import PlcTypeCreate, PlcTypeCreateInternal, PlcTypeRead, PlcTypeUpdate
+from ....schemas.collect.plc_brand import PlcTreeNode
 
 router = APIRouter(tags=["plc_types"])
 
@@ -32,13 +34,14 @@ async def write_plc_type(
 
 
 # unpaginated response for plc_types
-@router.get("/plc-types", response_model=List[PlcTypeRead])
+@router.get("/plc-types", response_model=dict[str, List[PlcTypeRead]])
 async def read_plc_types(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> List[PlcTypeRead]:
     plc_types_data = await crud_plc_types.get_multi(db=db, is_deleted=False)
 
-    return cast(List[PlcTypeRead], plc_types_data["data"])
+    response: dict[str, List[PlcTypeRead]] = {"data": cast(List[PlcTypeRead], plc_types_data["data"])}
+    return response
 
 
 @router.get("/plc-type/{id}", response_model=PlcTypeRead)
@@ -58,9 +61,10 @@ async def patch_plc_type(
     if db_plc_type is None:
         raise NotFoundException("PlcType not found")
 
-    existing_plc_type = await crud_plc_types.exists(db=db, name=values.name)
-    if existing_plc_type:
-        raise DuplicateValueException("PlcType Name not available")
+    if values.name and values.name != db_plc_type["name"]:
+        existing_plc_type = await crud_plc_types.exists(db=db, name=values.name)
+        if existing_plc_type:
+            raise DuplicateValueException("PlcType Name not available")
 
     await crud_plc_types.update(db=db, object=values, id=id)
     return {"message": "PlcType updated"}
@@ -74,3 +78,44 @@ async def erase_plc_type(request: Request, id: int, db: Annotated[AsyncSession, 
 
     await crud_plc_types.delete(db=db, id=id)
     return {"message": "PlcType deleted"}
+
+# Hierarchical tree structure for companies
+@router.get("/plc-types/tree", response_model=dict[str, List[PlcTreeNode]])
+async def read_companies_tree(
+    request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]
+) -> List[PlcTreeNode]:
+    """Get companies in a hierarchical tree structure"""
+    
+    # Get all plc_brands and plc_types
+    plc_brands_data = await crud_plc_brands.get_multi(db=db, is_deleted=False)
+    all_plc_brands = plc_brands_data.get("data", [])
+    plc_types_data = await crud_plc_types.get_multi(db=db, is_deleted=False)
+    all_plc_types = plc_types_data.get("data", [])
+
+    plc_tree = []
+
+    for plc_brand in all_plc_brands:
+        plc_tree_node: PlcTreeNode = PlcTreeNode(
+            id=plc_brand["id"],
+            name=plc_brand["name"],
+            plc_type_list=[
+                PlcTypeRead(
+                    id=plc_type["id"],
+                    name=plc_type["name"],
+                    plc_brand_id=plc_type["plc_brand_id"],
+                    controller_id=plc_type["controller_id"],
+                    controller_name=plc_type["controller_name"],
+                    update_user=plc_type["update_user"],
+                    created_at=plc_type["created_at"],
+                    updated_at=plc_type["updated_at"]
+                )
+                for plc_type in all_plc_types if plc_type["plc_brand_id"] == plc_brand["id"]
+            ],
+            update_user=plc_brand["update_user"],
+            created_at=plc_brand["created_at"],
+            updated_at=plc_brand["updated_at"]
+        )
+        plc_tree.append(plc_tree_node)
+    
+    response: dict[str, List[PlcTreeNode]] = {"data": cast(List[PlcTreeNode], plc_tree)}
+    return response

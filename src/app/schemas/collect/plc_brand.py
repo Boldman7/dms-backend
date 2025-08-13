@@ -1,9 +1,10 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, List
 
 from pydantic import BaseModel, Field
 
 from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
+from .plc_type import PlcTypeRead
 
 
 class PlcBrandBase(BaseModel):
@@ -42,3 +43,10 @@ class PlcBrandUpdateInternal(PlcBrandUpdate):
 class PlcBrandDelete(BaseModel):
     is_deleted: bool
     deleted_at: datetime
+
+class PlcTreeNode(PlcBrandRead):
+    """Plc with its children in tree structure"""
+    plc_type_list: List["PlcTypeRead"] = []
+
+# Update forward references
+PlcTreeNode.model_rebuild()
