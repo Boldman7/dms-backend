@@ -12,7 +12,6 @@ class Variable(Base):
     id: Mapped[int] = mapped_column("id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False)
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     data_type: Mapped[int] = mapped_column(Integer, nullable=False)
-    base_type: Mapped[int] = mapped_column(Integer, nullable=False)
     address: Mapped[str] = mapped_column(String, nullable=False)
     transmission_mode: Mapped[int] = mapped_column(Integer, nullable=False)
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), index=True, nullable=False)
