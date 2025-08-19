@@ -4,12 +4,13 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 
 from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
+from .product_group import ProductGroupRead
 
 
 class ProductBase(BaseModel):
     name: Annotated[str, Field(examples=["product name"])]
-    group_id: int | None
-    daily_capacity: Annotated[str | None, Field(default=None, examples=["daily capacity"])]
+    product_group_id: int | None = None
+    daily_capacity: int | None = None
     description: Annotated[str | None, Field(default=None, examples=["product description"])]
 
 
@@ -19,6 +20,7 @@ class Product(TimestampSchema, ProductBase, UUIDSchema, PersistentDeletion):
 
 class ProductRead(ProductBase):
     id: int
+    product_group: ProductGroupRead | None
     
     update_user: int | None
     created_at: datetime

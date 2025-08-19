@@ -11,8 +11,8 @@ class Product(Base):
 
     id: Mapped[int] = mapped_column("id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False)
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    group_id: Mapped[int | None] = mapped_column(ForeignKey("group.id"), index=True, nullable=True, default=None)
-    daily_capacity: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
+    product_group_id: Mapped[int | None] = mapped_column(ForeignKey("product_group.id"), index=True, nullable=True, default=None)
+    daily_capacity: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     description: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
 
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)

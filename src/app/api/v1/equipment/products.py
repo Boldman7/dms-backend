@@ -1,6 +1,6 @@
 from typing import Annotated, Any, cast
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from fastcrud.paginated import PaginatedListResponse, compute_offset, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,6 +8,8 @@ from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.equipment.crud_products import crud_products
 from ....schemas.equipment.product import ProductCreate, ProductCreateInternal, ProductRead, ProductUpdate
+from ....schemas.equipment.product_group import ProductGroupRead
+from ....models.equipment.product_group import ProductGroup
 
 router = APIRouter(tags=["products"])
 
@@ -25,7 +27,14 @@ async def write_product(
     product_internal = ProductCreateInternal(**product_internal_dict)
     created_product = await crud_products.create(db=db, object=product_internal)
 
-    product_read = await crud_products.get(db=db, id=created_product.id, schema_to_select=ProductRead)
+    product_read = await crud_products.get_joined(
+        db=db, 
+        id=created_product.id,
+        join_model=ProductGroup,
+        join_schema_to_select=ProductGroupRead,
+        nest_joins=True,
+        schema_to_select=ProductRead
+    )
     if product_read is None:
         raise NotFoundException("Created product not found")
 
@@ -35,9 +44,21 @@ async def write_product(
 # paginated response for products
 @router.get("/products", response_model=PaginatedListResponse[ProductRead])
 async def read_products(
-    request: Request, db: Annotated[AsyncSession, Depends(async_get_db)], page: int = 1, items_per_page: int = 10
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    name: str = Query(""),
+    page: int | None = Query(1),
+    items_per_page: int | None = Query(10)
 ) -> dict:
-    products_data = await crud_products.get_multi(db=db, offset=compute_offset(page, items_per_page), limit=items_per_page, is_deleted=False,)
+    products_data = await crud_products.get_multi_joined(
+        db=db,
+        join_model=ProductGroup,
+        join_schema_to_select=ProductGroupRead,
+        nest_joins=True,
+        offset=compute_offset(page, items_per_page),
+        limit=items_per_page,
+        name__contains=name,
+        is_deleted=False
+    )
 
     response: dict[str, Any] = paginated_response(crud_data=products_data, page=page, items_per_page=items_per_page)
     return response
@@ -45,7 +66,15 @@ async def read_products(
 
 @router.get("/product/{id}", response_model=ProductRead)
 async def read_product(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> ProductRead:
-    db_product = await crud_products.get(db=db, id=id, is_deleted=False, schema_to_select=ProductRead)
+    db_product = await crud_products.get_joined(
+        db=db,
+        id=id,
+        join_model=ProductGroup,
+        join_schema_to_select=ProductGroupRead,
+        nest_joins=True,
+        is_deleted=False,
+        schema_to_select=ProductRead
+    )
     if db_product is None:
         raise NotFoundException("Product not found")
 
