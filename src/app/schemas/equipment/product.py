@@ -20,6 +20,13 @@ class Product(TimestampSchema, ProductBase, UUIDSchema, PersistentDeletion):
 
 class ProductRead(ProductBase):
     id: int
+    
+    update_user: int | None
+    created_at: datetime
+    updated_at: datetime | None
+
+class ProductReadJoined(ProductBase):
+    id: int
     product_group: ProductGroupRead | None
     
     update_user: int | None

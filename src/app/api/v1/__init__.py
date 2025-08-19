@@ -8,6 +8,7 @@ from .tasks import router as tasks_router
 from .tiers import router as tiers_router
 from .users import router as users_router
 
+from .base import router as base_router
 from .collect import router as collect_router
 from .equipment import router as equipment_router
 
@@ -20,5 +21,6 @@ router.include_router(tasks_router)
 router.include_router(tiers_router)
 router.include_router(rate_limits_router)
 
+router.include_router(base_router)
 router.include_router(collect_router)
 router.include_router(equipment_router)

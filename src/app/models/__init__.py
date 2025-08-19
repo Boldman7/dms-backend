@@ -3,7 +3,8 @@ from .rate_limit import RateLimit
 from .tier import Tier
 from .user import User
 
-from .collect.company import Company
+from .base.company import Company
+
 from .collect.group import Group
 from .collect.plc_brand import PlcBrand
 from .collect.plc_type import PlcType

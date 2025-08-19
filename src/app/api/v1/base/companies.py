@@ -5,8 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
-from ....crud.collect.crud_companies import crud_companies
-from ....schemas.collect.company import CompanyCreate, CompanyCreateInternal, CompanyRead, CompanyUpdate, CompanyTreeNode
+from ....crud.base.crud_companies import crud_companies
+from ....schemas.base.company import CompanyCreate, CompanyCreateInternal, CompanyRead, CompanyUpdate, CompanyTreeNode
 
 router = APIRouter(tags=["companies"])
 

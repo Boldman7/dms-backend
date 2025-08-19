@@ -15,7 +15,7 @@ class Device(Base):
     company_id: Mapped[int] = mapped_column(ForeignKey("company.id"), index=True, nullable=False)
     product_id: Mapped[int] = mapped_column(ForeignKey("product.id"), index=True, nullable=False)
 
-    location_time: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    activate_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
 

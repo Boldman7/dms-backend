@@ -8,8 +8,8 @@ from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_smart_hardwares import crud_smart_hardwares
 from ....schemas.collect.smart_hardware import SmartHardwareCreate, SmartHardwareCreateInternal, SmartHardwareRead, SmartHardwareUpdate
-from ....schemas.collect.company import CompanyRead
-from ....models.collect.company import Company
+from ....schemas.base.company import CompanyRead
+from ....models.base.company import Company
 
 router = APIRouter(tags=["smart_hardwares"])
 

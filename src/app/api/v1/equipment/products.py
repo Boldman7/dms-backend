@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.equipment.crud_products import crud_products
-from ....schemas.equipment.product import ProductCreate, ProductCreateInternal, ProductRead, ProductUpdate
+from ....schemas.equipment.product import ProductCreate, ProductCreateInternal, ProductRead, ProductReadJoined, ProductUpdate
 from ....schemas.equipment.product_group import ProductGroupRead
 from ....models.equipment.product_group import ProductGroup
 
@@ -17,7 +17,7 @@ router = APIRouter(tags=["products"])
 @router.post("/product", status_code=201)
 async def write_product(
     request: Request, product: ProductCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
-) -> ProductRead:
+) -> ProductReadJoined:
     product_internal_dict = product.model_dump()
     db_product = await crud_products.exists(db=db, name=product_internal_dict["name"])
     if db_product:
@@ -33,16 +33,16 @@ async def write_product(
         join_model=ProductGroup,
         join_schema_to_select=ProductGroupRead,
         nest_joins=True,
-        schema_to_select=ProductRead
+        schema_to_select=ProductReadJoined
     )
     if product_read is None:
         raise NotFoundException("Created product not found")
 
-    return cast(ProductRead, product_read)
+    return cast(ProductReadJoined, product_read)
 
 
 # paginated response for products
-@router.get("/products", response_model=PaginatedListResponse[ProductRead])
+@router.get("/products", response_model=PaginatedListResponse[ProductReadJoined])
 async def read_products(
     db: Annotated[AsyncSession, Depends(async_get_db)],
     name: str = Query(""),
@@ -64,8 +64,8 @@ async def read_products(
     return response
 
 
-@router.get("/product/{id}", response_model=ProductRead)
-async def read_product(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> ProductRead:
+@router.get("/product/{id}", response_model=ProductReadJoined)
+async def read_product(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> ProductReadJoined:
     db_product = await crud_products.get_joined(
         db=db,
         id=id,
@@ -73,12 +73,12 @@ async def read_product(request: Request, id: int, db: Annotated[AsyncSession, De
         join_schema_to_select=ProductGroupRead,
         nest_joins=True,
         is_deleted=False,
-        schema_to_select=ProductRead
+        schema_to_select=ProductReadJoined
     )
     if db_product is None:
         raise NotFoundException("Product not found")
 
-    return cast(ProductRead, db_product)
+    return cast(ProductReadJoined, db_product)
 
 
 @router.patch("/product/{id}")

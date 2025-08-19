@@ -4,6 +4,8 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 
 from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
+from .product import ProductRead
+from ..base.company import CompanyRead
 
 
 class DeviceBase(BaseModel):
@@ -11,7 +13,7 @@ class DeviceBase(BaseModel):
     sn: Annotated[str, Field(examples=["device sn"])]
     company_id: int
     product_id: int
-    location_time: datetime | None = None
+    activate_date: datetime | None = None
 
 
 class Device(TimestampSchema, DeviceBase, UUIDSchema, PersistentDeletion):
@@ -20,6 +22,8 @@ class Device(TimestampSchema, DeviceBase, UUIDSchema, PersistentDeletion):
 
 class DeviceRead(DeviceBase):
     id: int
+    company: CompanyRead
+    product: ProductRead
     
     update_user: int | None
     created_at: datetime

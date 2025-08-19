@@ -4,7 +4,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field
 
 from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
-from ...schemas.collect.company import CompanyRead
+from ..base.company import CompanyRead
 
 
 class SmartHardwareBase(BaseModel):
