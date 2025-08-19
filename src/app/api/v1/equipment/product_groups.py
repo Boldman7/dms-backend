@@ -77,7 +77,7 @@ async def erase_product_group(request: Request, id: int, db: Annotated[AsyncSess
 
 
 # Hierarchical tree structure for product_groups
-@router.get("/product-groups/tree", response_model=List[ProductGroupTreeNode])
+@router.get("/product-groups/tree", response_model=dict[str, List[ProductGroupTreeNode]])
 async def read_product_groups_tree(
     request: Request, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> List[ProductGroupTreeNode]:
@@ -90,13 +90,13 @@ async def read_product_groups_tree(
     # Convert to ProductGroupTreeNode objects
     product_group_nodes = {}
     for product_group in all_product_groups:
-        product_group_nodes[product_group.id] = ProductGroupTreeNode(
-            id=product_group.id,
-            name=product_group.name,
-            parent_id=product_group.parent_id,
-            update_user=product_group.update_user,
-            created_at=product_group.created_at,
-            updated_at=product_group.updated_at,
+        product_group_nodes[product_group["id"]] = ProductGroupTreeNode(
+            id=product_group["id"],
+            name=product_group["name"],
+            parent_id=product_group["parent_id"],
+            update_user=product_group["update_user"],
+            created_at=product_group["created_at"],
+            updated_at=product_group["updated_at"],
             children=[]
         )
     
@@ -113,4 +113,5 @@ async def read_product_groups_tree(
             if parent:
                 parent.children.append(product_group_node)
     
-    return root_product_groups
+    response: dict[str, List[ProductGroupTreeNode]] = {"data": cast(List[ProductGroupTreeNode], root_product_groups)}
+    return response

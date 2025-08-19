@@ -8,7 +8,7 @@ from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 
 class ProductGroupBase(BaseModel):
     name: Annotated[str, Field(examples=["product_group name"])]
-    parent_id: int | None
+    parent_id: int | None = None
 
 
 class ProductGroup(TimestampSchema, ProductGroupBase, UUIDSchema, PersistentDeletion):
