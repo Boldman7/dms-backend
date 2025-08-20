@@ -20,3 +20,4 @@ from .equipment.product_group import ProductGroup
 from .equipment.product import Product
 
 from .permission.license import License
+from .permission.role import Role
