@@ -11,6 +11,7 @@ from .users import router as users_router
 from .base import router as base_router
 from .collect import router as collect_router
 from .equipment import router as equipment_router
+from .permission import router as permission_router
 
 router = APIRouter(prefix="/v1")
 router.include_router(login_router)
@@ -24,3 +25,4 @@ router.include_router(rate_limits_router)
 router.include_router(base_router)
 router.include_router(collect_router)
 router.include_router(equipment_router)
+router.include_router(permission_router)

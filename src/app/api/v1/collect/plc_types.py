@@ -79,6 +79,7 @@ async def erase_plc_type(request: Request, id: int, db: Annotated[AsyncSession, 
     await crud_plc_types.delete(db=db, id=id)
     return {"message": "PlcType deleted"}
 
+
 # Hierarchical tree structure for companies
 @router.get("/plc-types/tree", response_model=dict[str, List[PlcTreeNode]])
 async def read_companies_tree(

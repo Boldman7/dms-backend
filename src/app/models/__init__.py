@@ -18,3 +18,5 @@ from .equipment.data_source import DataSource
 from .equipment.device import Device
 from .equipment.product_group import ProductGroup
 from .equipment.product import Product
+
+from .permission.license import License
