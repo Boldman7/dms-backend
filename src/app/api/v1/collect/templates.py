@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_templates import crud_templates
-from ....schemas.collect.template import TemplateCreate, TemplateCreateInternal, TemplateRead, TemplateUpdate, TemplateCopy, TemplateCopyInternal
+from ....schemas.collect.template import TemplateCreate, TemplateCreateInternal, TemplateRead, TemplateReadJoined, TemplateUpdate, TemplateCopy, TemplateCopyInternal
 from ....schemas.collect.smart_hardware_type import SmartHardwareTypeRead
 from ....models.collect.smart_hardware_type import SmartHardwareType
 
@@ -18,7 +18,7 @@ router = APIRouter(tags=["templates"])
 @router.post("/template", status_code=201)
 async def write_template(
     request: Request, template: TemplateCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
-) -> TemplateRead:
+) -> TemplateReadJoined:
     template_internal_dict = template.model_dump()
     db_template = await crud_templates.get(db=db, name=template_internal_dict["name"])
     if db_template:
@@ -37,17 +37,17 @@ async def write_template(
         join_model=SmartHardwareType,
         join_schema_to_select=SmartHardwareTypeRead,
         nest_joins=True,
-        schema_to_select=TemplateRead,
+        schema_to_select=TemplateReadJoined,
         is_deleted=False,
     )
     if template_read is None:
         raise NotFoundException("Created template not found")
 
-    return cast(TemplateRead, template_read)
+    return template_read
 
 
 # paginated response for templates
-@router.get("/templates", response_model=PaginatedListResponse[TemplateRead])
+@router.get("/templates", response_model=PaginatedListResponse[TemplateReadJoined])
 async def read_templates(
     db: Annotated[AsyncSession, Depends(async_get_db)],
     name: str = Query(""),
@@ -59,7 +59,7 @@ async def read_templates(
         join_model=SmartHardwareType,
         join_schema_to_select=SmartHardwareTypeRead,
         nest_joins=True,
-        schema_to_select=TemplateRead,
+        schema_to_select=TemplateReadJoined,
         offset=compute_offset(page, items_per_page),
         limit=items_per_page,
         name__contains=name,
@@ -70,21 +70,21 @@ async def read_templates(
     return response
 
 
-@router.get("/template/{id}", response_model=TemplateRead)
-async def read_template(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> TemplateRead:
+@router.get("/template/{id}", response_model=TemplateReadJoined)
+async def read_template(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> TemplateReadJoined:
     db_template = await crud_templates.get_joined(
         db=db,
         id=id,
         join_model=SmartHardwareType,
         join_schema_to_select=SmartHardwareTypeRead,
         nest_joins=True,
-        schema_to_select=TemplateRead,
+        schema_to_select=TemplateReadJoined,
         is_deleted=False,
     )
     if db_template is None:
         raise NotFoundException("Template not found")
 
-    return cast(TemplateRead, db_template)
+    return db_template
 
 
 @router.patch("/template/{id}")

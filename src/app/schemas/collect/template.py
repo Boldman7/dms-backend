@@ -17,7 +17,16 @@ class Template(TimestampSchema, TemplateBase, UUIDSchema, PersistentDeletion):
 
 class TemplateRead(TemplateBase):
     id: int
-    # smart_hardware_type_id: int
+    smart_hardware_type_id: int
+
+    update_user: int | None
+    created_at: datetime
+    updated_at: datetime | None
+
+
+class TemplateReadJoined(TemplateBase):
+    id: int
+    smart_hardware_type_id: int
     smart_hardware_type: SmartHardwareTypeRead
 
     update_user: int | None

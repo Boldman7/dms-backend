@@ -1,6 +1,6 @@
 from typing import Annotated, Any, cast
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Query
 from fastcrud.paginated import PaginatedListResponse, compute_offset, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -8,6 +8,8 @@ from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.equipment.crud_data_sources import crud_data_sources
 from ....schemas.equipment.data_source import DataSourceCreate, DataSourceCreateInternal, DataSourceRead, DataSourceUpdate
+from ....schemas.collect.template import TemplateRead
+from ....models.collect.template import Template
 
 router = APIRouter(tags=["data_sources"])
 
@@ -25,19 +27,39 @@ async def write_data_source(
     data_source_internal = DataSourceCreateInternal(**data_source_internal_dict)
     created_data_source = await crud_data_sources.create(db=db, object=data_source_internal)
 
-    data_source_read = await crud_data_sources.get(db=db, id=created_data_source.id, schema_to_select=DataSourceRead)
+    data_source_read = await crud_data_sources.get_joined(
+        db=db,
+        id=created_data_source.id,
+        join_model=Template,
+        join_schema_to_select=TemplateRead,
+        nest_joins=True,
+        schema_to_select=DataSourceRead
+    )
     if data_source_read is None:
         raise NotFoundException("Created data_source not found")
 
-    return cast(DataSourceRead, data_source_read)
+    return data_source_read
 
 
 # paginated response for data_sources
 @router.get("/data-sources", response_model=PaginatedListResponse[DataSourceRead])
 async def read_data_sources(
-    request: Request, db: Annotated[AsyncSession, Depends(async_get_db)], page: int = 1, items_per_page: int = 10
+    db: Annotated[AsyncSession, Depends(async_get_db)],
+    name: str = Query(""),
+    page: int | None = Query(1),
+    items_per_page: int | None = Query(10)
 ) -> dict:
-    data_sources_data = await crud_data_sources.get_multi(db=db, offset=compute_offset(page, items_per_page), limit=items_per_page, is_deleted=False,)
+    data_sources_data = await crud_data_sources.get_multi_joined(
+        db=db,
+        join_model=Template,
+        join_schema_to_select=TemplateRead,
+        nest_joins=True,
+        schema_to_select=DataSourceRead,
+        offset=compute_offset(page, items_per_page),
+        limit=items_per_page,
+        name__contains=name,
+        is_deleted=False
+    )
 
     response: dict[str, Any] = paginated_response(crud_data=data_sources_data, page=page, items_per_page=items_per_page)
     return response
@@ -45,11 +67,19 @@ async def read_data_sources(
 
 @router.get("/data-source/{id}", response_model=DataSourceRead)
 async def read_data_source(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> DataSourceRead:
-    db_data_source = await crud_data_sources.get(db=db, id=id, is_deleted=False, schema_to_select=DataSourceRead)
+    db_data_source = await crud_data_sources.get_joined(
+        db=db,
+        id=id,
+        join_model=Template,
+        join_schema_to_select=TemplateRead,
+        nest_joins=True,
+        is_deleted=False,
+        schema_to_select=DataSourceRead
+    )
     if db_data_source is None:
         raise NotFoundException("DataSource not found")
 
-    return cast(DataSourceRead, db_data_source)
+    return db_data_source
 
 
 @router.patch("/data-source/{id}")
