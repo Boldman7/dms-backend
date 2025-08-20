@@ -14,8 +14,8 @@ class CompanyBase(BaseModel):
     area: str | None = None
     address: str | None = None
     email: str | None = None
-    officePhone: str | None = None
-    isEndUser: int | None = None
+    phone_number: str | None = None
+    is_end_user: Annotated[int, Field(examples=[0, 1])]
 
 class Company(TimestampSchema, CompanyBase, UUIDSchema, PersistentDeletion):
     pass
@@ -61,8 +61,8 @@ class CompanyTreeNode(BaseModel):
     area: str | None
     address: str | None
     email: str | None
-    officePhone: str | None
-    isEndUser: int
+    phone_number: str | None
+    is_end_user: int
     update_user: int | None
     created_at: datetime
     updated_at: datetime | None

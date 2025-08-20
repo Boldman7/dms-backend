@@ -11,14 +11,14 @@ class Company(Base):
 
     id: Mapped[int] = mapped_column("id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False)
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    is_end_user: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("company.id"), index=True, nullable=True, default=None)
     province: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     city: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     area: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     address: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     email: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
-    officePhone: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
-    isEndUser: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    phone_number: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
 
