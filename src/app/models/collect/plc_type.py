@@ -10,7 +10,7 @@ class PlcType(Base):
     __tablename__ = "plc_type"
 
     id: Mapped[int] = mapped_column("id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False)
-    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=False)
     plc_brand_id: Mapped[int] = mapped_column(ForeignKey("plc_brand.id"), index=True, nullable=False)
     controller_id: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     controller_name: Mapped[str | None] = mapped_column(String, nullable=True, default=None)

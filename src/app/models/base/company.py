@@ -10,7 +10,7 @@ class Company(Base):
     __tablename__ = "company"
 
     id: Mapped[int] = mapped_column("id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False)
-    name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String, nullable=False, unique=False)
     is_end_user: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("company.id"), index=True, nullable=True, default=None)
     province: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
