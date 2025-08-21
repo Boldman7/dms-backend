@@ -16,9 +16,6 @@ async def write_company(
     request: Request, company: CompanyCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> CompanyRead:
     company_internal_dict = company.model_dump()
-    db_company = await crud_companies.exists(db=db, name=company_internal_dict["name"])
-    if db_company:
-        raise DuplicateValueException("Company Name not available")
 
     company_internal_dict["update_user"] = None
     company_internal = CompanyCreateInternal(**company_internal_dict)
@@ -58,10 +55,6 @@ async def patch_company(
     db_company = await crud_companies.get(db=db, id=id, schema_to_select=CompanyRead)
     if db_company is None:
         raise NotFoundException("Company not found")
-
-    existing_company = await crud_companies.exists(db=db, name=values.name)
-    if existing_company:
-        raise DuplicateValueException("Company Name not available")
 
     await crud_companies.update(db=db, object=values, id=id)
     return {"message": "Company updated"}

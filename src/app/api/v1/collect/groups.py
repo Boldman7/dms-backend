@@ -16,6 +16,13 @@ async def write_group(
     request: Request, group: GroupCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> GroupRead:
     group_internal_dict = group.model_dump()
+    db_group = await crud_groups.get(db=db, name=group_internal_dict["name"])
+    if db_group:
+        if db_group["is_deleted"]:
+            await crud_groups.db_delete(db=db, id=db_group["id"])
+        else:
+            raise DuplicateValueException("Group Name not available")
+        
     group_internal_dict["update_user"] = None
     group_internal = GroupCreateInternal(**group_internal_dict)
     created_group = await crud_groups.create(db=db, object=group_internal)
@@ -59,6 +66,14 @@ async def patch_group(
     db_group = await crud_groups.get(db=db, id=id, schema_to_select=GroupRead)
     if db_group is None:
         raise NotFoundException("Group not found")
+    
+    if values.name and values.name != db_group["name"]:
+        existing_group = await crud_groups.get(db=db, name=values.name)
+        if existing_group:
+            if existing_group["is_deleted"]:
+                await crud_groups.db_delete(db=db, id=existing_group["id"])
+            else:
+                raise DuplicateValueException("Group Name not available")
 
     await crud_groups.update(db=db, object=values, id=id)
     return {"message": "Group updated"}

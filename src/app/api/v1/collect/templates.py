@@ -95,9 +95,13 @@ async def patch_template(
     if db_template is None:
         raise NotFoundException("Template not found")
 
-    existing_template = await crud_templates.exists(db=db, name=values.name)
-    if existing_template:
-        raise DuplicateValueException("Template Name not available")
+    if values.name and values.name != db_template["name"]:
+        existing_template = await crud_templates.get(db=db, name=values.name)
+        if existing_template:
+            if existing_template["is_deleted"]:
+                await crud_templates.db_delete(db=db, id=existing_template["id"])
+            else:
+                raise DuplicateValueException("Template Name not available")
 
     await crud_templates.update(db=db, object=values, id=id)
     return {"message": "Template updated"}

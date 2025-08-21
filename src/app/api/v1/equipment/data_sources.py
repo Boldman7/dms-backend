@@ -19,9 +19,12 @@ async def write_data_source(
     request: Request, data_source: DataSourceCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> DataSourceRead:
     data_source_internal_dict = data_source.model_dump()
-    db_data_source = await crud_data_sources.exists(db=db, name=data_source_internal_dict["name"])
+    db_data_source = await crud_data_sources.get(db=db, name=data_source_internal_dict["name"])
     if db_data_source:
-        raise DuplicateValueException("DataSource Name not available")
+        if db_data_source["is_deleted"]:
+            await crud_data_sources.db_delete(db=db, id=db_data_source["id"])
+        else:
+            raise DuplicateValueException("DataSource Name not available")
 
     data_source_internal_dict["update_user"] = None
     data_source_internal = DataSourceCreateInternal(**data_source_internal_dict)
@@ -90,9 +93,13 @@ async def patch_data_source(
     if db_data_source is None:
         raise NotFoundException("DataSource not found")
 
-    existing_data_source = await crud_data_sources.exists(db=db, name=values.name)
-    if existing_data_source:
-        raise DuplicateValueException("DataSource Name not available")
+    if values.name and values.name != db_data_source["name"]:
+        existing_data_source = await crud_data_sources.get(db=db, name=values.name)
+        if existing_data_source:
+            if existing_data_source["is_deleted"]:
+                await crud_data_sources.db_delete(db=db, id=existing_data_source["id"])
+            else:
+                raise DuplicateValueException("DataSource Name not available")
 
     await crud_data_sources.update(db=db, object=values, id=id)
     return {"message": "DataSource updated"}

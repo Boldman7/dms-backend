@@ -25,15 +25,21 @@ router = APIRouter(tags=["users"])
 async def write_user(
     request: Request, user: UserCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> UserRead:
-    email_row = await crud_users.exists(db=db, email=user.email)
-    if email_row:
-        raise DuplicateValueException("Email is already registered")
-
-    username_row = await crud_users.exists(db=db, username=user.username)
-    if username_row:
-        raise DuplicateValueException("Username not available")
-
     user_internal_dict = user.model_dump()
+    db_user = await crud_users.get(db=db, email=user_internal_dict["email"])
+    if db_user:
+        if db_user["is_deleted"]:
+            await crud_users.db_delete(db=db, id=db_user["id"])
+        else:
+            raise DuplicateValueException("Email is already registered")
+    
+    db_user = await crud_users.get(db=db, name=user_internal_dict["name"])
+    if db_user:
+        if db_user["is_deleted"]:
+            await crud_users.db_delete(db=db, id=db_user["id"])
+        else:
+            raise DuplicateValueException("User Name not available")
+
     roles = user_internal_dict.pop("roles", [])
     user_internal_dict["update_user"] = None
     user_internal_dict["hashed_password"] = get_password_hash(password=user_internal_dict["password"])
@@ -112,15 +118,21 @@ async def patch_user(
     # if db_user.username != current_user["username"]:
         # raise ForbiddenException()
 
-    if values.username != db_user.username:
-        existing_username = await crud_users.exists(db=db, username=values.username)
-        if existing_username:
-            raise DuplicateValueException("Username not available")
+    if values.name and values.name != db_user["name"]:
+        existing_user = await crud_users.get(db=db, name=values.name)
+        if existing_user:
+            if existing_user["is_deleted"]:
+                await crud_users.db_delete(db=db, id=existing_user["id"])
+            else:
+                raise DuplicateValueException("User Name not available")
 
-    if values.email != db_user.email:
-        existing_email = await crud_users.exists(db=db, email=values.email)
-        if existing_email:
-            raise DuplicateValueException("Email is already registered")
+    if values.email and values.email != db_user["email"]:
+        existing_user = await crud_users.get(db=db, email=values.email)
+        if existing_user:
+            if existing_user["is_deleted"]:
+                await crud_users.db_delete(db=db, id=existing_user["id"])
+            else:
+                raise DuplicateValueException("Email is already registered")
 
     roles = values.roles
     del values.roles
@@ -133,7 +145,6 @@ async def patch_user(
         db_user.roles.extend(roles)
         await db.commit()
         # await db.refresh(db_user)
-
 
     return {"message": "User updated"}
 

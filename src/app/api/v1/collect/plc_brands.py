@@ -16,9 +16,12 @@ async def write_plc_brand(
     request: Request, plc_brand: PlcBrandCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> PlcBrandRead:
     plc_brand_internal_dict = plc_brand.model_dump()
-    db_plc_brand = await crud_plc_brands.exists(db=db, name=plc_brand_internal_dict["name"])
-    if db_plc_brand:
-        raise DuplicateValueException("PlcBrand Name not available")
+    db_plc_brands = await crud_plc_brands.get(db=db, name=plc_brand_internal_dict["name"])
+    if db_plc_brands:
+        if db_plc_brands["is_deleted"]:
+            await crud_plc_brands.db_delete(db=db, id=db_plc_brands["id"])
+        else:
+            raise DuplicateValueException("PlcBrand Name not available")
 
     plc_brand_internal_dict["update_user"] = None
     plc_brand_internal = PlcBrandCreateInternal(**plc_brand_internal_dict)
@@ -59,9 +62,13 @@ async def patch_plc_brand(
     if db_plc_brand is None:
         raise NotFoundException("PlcBrand not found")
 
-    existing_plc_brand = await crud_plc_brands.exists(db=db, name=values.name)
-    if existing_plc_brand:
-        raise DuplicateValueException("PlcBrand Name not available")
+    if values.name and values.name != db_plc_brand["name"]:
+        existing_plc_brand = await crud_plc_brands.get(db=db, name=values.name)
+        if existing_plc_brand:
+            if existing_plc_brand["is_deleted"]:
+                await crud_plc_brands.db_delete(db=db, id=existing_plc_brand["id"])
+            else:
+                raise DuplicateValueException("PlcBrand Name not available")
 
     await crud_plc_brands.update(db=db, object=values, id=id)
     return {"message": "PlcBrand updated"}

@@ -95,9 +95,12 @@ async def patch_license(
         raise NotFoundException("License not found")
 
     if values.name and values.name != db_license["name"]:
-        existing_plc_type = await crud_licenses.exists(db=db, name=values.name)
-        if existing_plc_type:
-            raise DuplicateValueException("License Name not available")
+        existing_license = await crud_licenses.get(db=db, name=values.name)
+        if existing_license:
+            if existing_license["is_deleted"]:
+                await crud_licenses.db_delete(db=db, id=existing_license["id"])
+            else:
+                raise DuplicateValueException("License Name not available")
 
     await crud_licenses.update(db=db, object=values, id=id)
     return {"message": "License updated"}

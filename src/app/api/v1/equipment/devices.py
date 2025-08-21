@@ -23,9 +23,12 @@ async def write_device(
     request: Request, device: DeviceCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> DeviceRead:
     device_internal_dict = device.model_dump()
-    db_device = await crud_devices.exists(db=db, name=device_internal_dict["name"])
+    db_device = await crud_devices.get(db=db, name=device_internal_dict["name"])
     if db_device:
-        raise DuplicateValueException("Device Name not available")
+        if db_device["is_deleted"]:
+            await crud_devices.db_delete(db=db, id=db_device["id"])
+        else:
+            raise DuplicateValueException("Device Name not available")
 
     device_internal_dict["update_user"] = None
     device_internal = DeviceCreateInternal(**device_internal_dict)
@@ -155,9 +158,13 @@ async def patch_device(
     if db_device is None:
         raise NotFoundException("Device not found")
 
-    existing_device = await crud_devices.exists(db=db, name=values.name)
-    if existing_device:
-        raise DuplicateValueException("Device Name not available")
+    if values.name and values.name != db_device["name"]:
+        existing_device = await crud_devices.get(db=db, name=values.name)
+        if existing_device:
+            if existing_device["is_deleted"]:
+                await crud_devices.db_delete(db=db, id=existing_device["id"])
+            else:
+                raise DuplicateValueException("Device Name not available")
 
     await crud_devices.update(db=db, object=values, id=id)
     return {"message": "Device updated"}

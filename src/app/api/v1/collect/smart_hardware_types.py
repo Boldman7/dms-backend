@@ -16,9 +16,12 @@ async def write_smart_hardware_type(
     request: Request, smart_hardware_type: SmartHardwareTypeCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> SmartHardwareTypeRead:
     smart_hardware_type_internal_dict = smart_hardware_type.model_dump()
-    db_smart_hardware_type = await crud_smart_hardware_types.exists(db=db, name=smart_hardware_type_internal_dict["name"])
+    db_smart_hardware_type = await crud_smart_hardware_types.get(db=db, name=smart_hardware_type_internal_dict["name"])
     if db_smart_hardware_type:
-        raise DuplicateValueException("SmartHardwareType Name not available")
+        if db_smart_hardware_type["is_deleted"]:
+            await crud_smart_hardware_types.db_delete(db=db, id=db_smart_hardware_type["id"])
+        else:
+            raise DuplicateValueException("SmartHardwareType Name not available")
 
     smart_hardware_type_internal_dict["update_user"] = None
     smart_hardware_type_internal = SmartHardwareTypeCreateInternal(**smart_hardware_type_internal_dict)
@@ -59,9 +62,13 @@ async def patch_smart_hardware_type(
     if db_smart_hardware_type is None:
         raise NotFoundException("SmartHardwareType not found")
 
-    existing_smart_hardware_type = await crud_smart_hardware_types.exists(db=db, name=values.name)
-    if existing_smart_hardware_type:
-        raise DuplicateValueException("SmartHardwareType Name not available")
+    if values.name and values.name != db_smart_hardware_type["name"]:
+        existing_smart_hardware_type = await crud_smart_hardware_types.get(db=db, name=values.name)
+        if existing_smart_hardware_type:
+            if existing_smart_hardware_type["is_deleted"]:
+                await crud_smart_hardware_types.db_delete(db=db, id=existing_smart_hardware_type["id"])
+            else:
+                raise DuplicateValueException("SmartHardwareType Name not available")
 
     await crud_smart_hardware_types.update(db=db, object=values, id=id)
     return {"message": "SmartHardwareType updated"}

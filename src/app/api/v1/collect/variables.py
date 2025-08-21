@@ -19,9 +19,12 @@ async def write_variable(
     request: Request, variable: VariableCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> VariableRead:
     variable_internal_dict = variable.model_dump()
-    db_variable = await crud_variables.exists(db=db, name=variable_internal_dict["name"])
+    db_variable = await crud_variables.get(db=db, name=variable_internal_dict["name"])
     if db_variable:
-        raise DuplicateValueException("Variable Name not available")
+        if db_variable["is_deleted"]:
+            await crud_variables.db_delete(db=db, id=db_variable["id"])
+        else:
+            raise DuplicateValueException("Variable Name not available")
 
     variable_internal_dict["update_user"] = None
     variable_internal = VariableCreateInternal(**variable_internal_dict)
@@ -105,9 +108,13 @@ async def patch_variable(
     if db_variable is None:
         raise NotFoundException("Variable not found")
 
-    existing_variable = await crud_variables.exists(db=db, name=values.name)
-    if existing_variable:
-        raise DuplicateValueException("Variable Name not available")
+    if values.name and values.name != db_variable["name"]:
+        existing_variable = await crud_variables.get(db=db, name=values.name)
+        if existing_variable:
+            if existing_variable["is_deleted"]:
+                await crud_variables.db_delete(db=db, id=existing_variable["id"])
+            else:
+                raise DuplicateValueException("Variable Name not available")
 
     await crud_variables.update(db=db, object=values, id=id)
     return {"message": "Variable updated"}

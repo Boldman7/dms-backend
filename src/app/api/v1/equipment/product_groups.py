@@ -16,9 +16,12 @@ async def write_product_group(
     request: Request, product_group: ProductGroupCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> ProductGroupRead:
     product_group_internal_dict = product_group.model_dump()
-    db_product_group = await crud_product_groups.exists(db=db, name=product_group_internal_dict["name"])
+    db_product_group = await crud_product_groups.get(db=db, name=product_group_internal_dict["name"])
     if db_product_group:
-        raise DuplicateValueException("ProductGroup Name not available")
+        if db_product_group["is_deleted"]:
+            await crud_product_groups.db_delete(db=db, id=db_product_group["id"])
+        else:
+            raise DuplicateValueException("ProductGroup Name not available")
 
     product_group_internal_dict["update_user"] = None
     product_group_internal = ProductGroupCreateInternal(**product_group_internal_dict)
@@ -58,9 +61,13 @@ async def patch_product_group(
     if db_product_group is None:
         raise NotFoundException("ProductGroup not found")
 
-    existing_product_group = await crud_product_groups.exists(db=db, name=values.name)
-    if existing_product_group:
-        raise DuplicateValueException("ProductGroup Name not available")
+    if values.name and values.name != db_product_group["name"]:
+        existing_product_group = await crud_product_groups.get(db=db, name=values.name)
+        if existing_product_group:
+            if existing_product_group["is_deleted"]:
+                await crud_product_groups.db_delete(db=db, id=existing_product_group["id"])
+            else:
+                raise DuplicateValueException("ProductGroup Name not available")
 
     await crud_product_groups.update(db=db, object=values, id=id)
     return {"message": "ProductGroup updated"}

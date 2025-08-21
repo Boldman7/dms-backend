@@ -18,9 +18,6 @@ async def write_plc_type(
     request: Request, plc_type: PlcTypeCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> PlcTypeRead:
     plc_type_internal_dict = plc_type.model_dump()
-    db_plc_type = await crud_plc_types.exists(db=db, name=plc_type_internal_dict["name"])
-    if db_plc_type:
-        raise DuplicateValueException("PlcType Name not available")
 
     plc_type_internal_dict["update_user"] = None
     plc_type_internal = PlcTypeCreateInternal(**plc_type_internal_dict)
@@ -60,11 +57,6 @@ async def patch_plc_type(
     db_plc_type = await crud_plc_types.get(db=db, id=id, schema_to_select=PlcTypeRead)
     if db_plc_type is None:
         raise NotFoundException("PlcType not found")
-
-    if values.name and values.name != db_plc_type["name"]:
-        existing_plc_type = await crud_plc_types.exists(db=db, name=values.name)
-        if existing_plc_type:
-            raise DuplicateValueException("PlcType Name not available")
 
     await crud_plc_types.update(db=db, object=values, id=id)
     return {"message": "PlcType updated"}

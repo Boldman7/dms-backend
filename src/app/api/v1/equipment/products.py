@@ -19,9 +19,12 @@ async def write_product(
     request: Request, product: ProductCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> ProductReadJoined:
     product_internal_dict = product.model_dump()
-    db_product = await crud_products.exists(db=db, name=product_internal_dict["name"])
+    db_product = await crud_products.get(db=db, name=product_internal_dict["name"])
     if db_product:
-        raise DuplicateValueException("Product Name not available")
+        if db_product["is_deleted"]:
+            await crud_products.db_delete(db=db, id=db_product["id"])
+        else:
+            raise DuplicateValueException("Product Name not available")
 
     product_internal_dict["update_user"] = None
     product_internal = ProductCreateInternal(**product_internal_dict)
@@ -89,9 +92,13 @@ async def patch_product(
     if db_product is None:
         raise NotFoundException("Product not found")
 
-    existing_product = await crud_products.exists(db=db, name=values.name)
-    if existing_product:
-        raise DuplicateValueException("Product Name not available")
+    if values.name and values.name != db_product["name"]:
+        existing_product = await crud_products.get(db=db, name=values.name)
+        if existing_product:
+            if existing_product["is_deleted"]:
+                await crud_products.db_delete(db=db, id=existing_product["id"])
+            else:
+                raise DuplicateValueException("Product Name not available")
 
     await crud_products.update(db=db, object=values, id=id)
     return {"message": "Product updated"}

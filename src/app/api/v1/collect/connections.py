@@ -18,9 +18,12 @@ async def write_connection(
     request: Request, connection: ConnectionCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> ConnectionRead:
     connection_internal_dict = connection.model_dump()
-    db_connection = await crud_connections.exists(db=db, name=connection_internal_dict["name"])
+    db_connection = await crud_connections.get(db=db, name=connection_internal_dict["name"])
     if db_connection:
-        raise DuplicateValueException("Connection Name not available")
+        if db_connection["is_deleted"]:
+            await crud_connections.db_delete(db=db, id=db_connection["id"])
+        else:
+            raise DuplicateValueException("Connection Name not available")
 
     connection_internal_dict["update_user"] = None
     connection_internal = ConnectionCreateInternal(**connection_internal_dict)
@@ -95,9 +98,12 @@ async def patch_connection(
         raise NotFoundException("Connection not found")
 
     if values.name and values.name != db_connection["name"]:
-            existing_connection = await crud_connections.exists(db=db, name=values.name)
-            if existing_connection:
-                raise DuplicateValueException("PlcType Name not available")
+        existing_connection = await crud_connections.get(db=db, name=values.name)
+        if existing_connection:
+            if existing_connection["is_deleted"]:
+                await crud_connections.db_delete(db=db, id=existing_connection["id"])
+            else:
+                raise DuplicateValueException("Connection Name not available")
 
     await crud_connections.update(db=db, object=values, id=id)
     return {"message": "Connection updated"}

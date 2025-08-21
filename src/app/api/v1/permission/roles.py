@@ -95,9 +95,12 @@ async def patch_role(
         raise NotFoundException("Role not found")
 
     if values.name and values.name != db_role["name"]:
-        existing_plc_type = await crud_roles.exists(db=db, name=values.name)
-        if existing_plc_type:
-            raise DuplicateValueException("Role Name not available")
+        existing_role = await crud_roles.get(db=db, name=values.name)
+        if existing_role:
+            if existing_role["is_deleted"]:
+                await crud_roles.db_delete(db=db, id=existing_role["id"])
+            else:
+                raise DuplicateValueException("Role Name not available")
 
     await crud_roles.update(db=db, object=values, id=id)
     return {"message": "Role updated"}
