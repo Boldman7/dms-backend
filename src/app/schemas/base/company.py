@@ -51,21 +51,7 @@ class CompanyDelete(BaseModel):
     deleted_at: datetime
 
 
-class CompanyTreeNode(BaseModel):
-    """Company with its children in tree structure"""
-    id: int
-    name: str
-    parent_id: int | None
-    province: str | None
-    city: str | None
-    area: str | None
-    address: str | None
-    email: str | None
-    phone_number: str | None
-    is_end_user: int
-    update_user: int | None
-    created_at: datetime
-    updated_at: datetime | None
+class CompanyTreeNode(CompanyRead):
     children: List["CompanyTreeNode"] = []
 
 # Update forward references
