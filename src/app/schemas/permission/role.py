@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Annotated, List
+from typing import Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 from ..base.company import CompanyRead
@@ -10,6 +10,9 @@ class RoleBase(BaseModel):
     name: Annotated[str, Field(examples=["role name"])]
     company_id: int
     description: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+    
 
 class Role(TimestampSchema, RoleBase, UUIDSchema, PersistentDeletion):
     pass

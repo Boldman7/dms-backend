@@ -1,9 +1,10 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, String, ForeignKey, Integer
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...core.db.database import Base
+from ..user_role import user_role
 
 
 class Role(Base):
@@ -13,6 +14,13 @@ class Role(Base):
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     company_id: Mapped[int] = mapped_column(ForeignKey("company.id"), index=True, nullable=False)
     public_type: Mapped[int] = mapped_column(Integer, nullable=False)
+    users: Mapped[list["User"]] = relationship(
+        "User",
+        secondary=user_role,
+        back_populates="roles",
+        lazy="selectin",
+        default_factory=list
+    )
     description: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
