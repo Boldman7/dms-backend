@@ -44,10 +44,10 @@ class RoleCreateInternal(RoleBase):
 
 
 class RoleUpdate(RoleBase):
-    pass
+    resources: List[int] = Field(default_factory=list)
 
 
-class RoleUpdateInternal(RoleUpdate):
+class RoleUpdateInternal(RoleBase):
     update_user: int | None
     updated_at: datetime
 

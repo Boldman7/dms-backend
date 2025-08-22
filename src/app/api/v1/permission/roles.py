@@ -21,7 +21,7 @@ router = APIRouter(tags=["roles"])
 @router.post("/role", status_code=201)
 async def write_role(
     request: Request, role: RoleCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
-) -> RoleReadJoined:
+) -> dict[str, str]:
     role_internal_dict = role.model_dump()
     db_role = await crud_roles.get(db=db, name=role_internal_dict["name"])
     if db_role:
@@ -36,20 +36,16 @@ async def write_role(
     role_internal = RoleCreateInternal(**role_internal_dict)
     created_role = await crud_roles.create(db=db, object=role_internal)
 
-    print(created_role)
-
-    # result = await db.execute(select(Resource).where(Resource.id.in_(resources)))
-    # resources = result.scalars().all()
-    # created_role.resources.extend(resources)
-    # await db.commit()
-    # await db.refresh(created_role)
-    
-    # created_role.resources = resources
-
-    if role is None:
+    if created_role is None:
         raise NotFoundException("Created role not found")
+    
+    if resources:
+        result = await db.execute(select(Resource).where(Resource.id.in_(resources)))
+        resources = result.scalars().all()
+        created_role.resources.extend(resources)
+        await db.commit()
 
-    return cast(RoleReadJoined, created_role)
+    return {"message": "Role created"}
 
 
 # paginated response for roles
@@ -101,11 +97,11 @@ async def read_role(request: Request, id: int, db: Annotated[AsyncSession, Depen
 async def patch_role(
     request: Request, id: int, values: RoleUpdate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> dict[str, str]:
-    db_role = await crud_roles.get(db=db, id=id, schema_to_select=RoleRead)
+    db_role = await db.get(Role, id)
     if db_role is None:
         raise NotFoundException("Role not found")
 
-    if values.name and values.name != db_role["name"]:
+    if values.name and values.name != db_role.name:
         existing_role = await crud_roles.get(db=db, name=values.name)
         if existing_role:
             if existing_role["is_deleted"]:
@@ -113,7 +109,18 @@ async def patch_role(
             else:
                 raise DuplicateValueException("Role Name not available")
 
+    resources = values.resources
+    del values.resources
     await crud_roles.update(db=db, object=values, id=id)
+    db_role.resources.clear()  # Clear existing resources
+
+    if resources:
+        result = await db.execute(select(Resource).where(Resource.id.in_(resources)))
+        resources = result.scalars().all()
+        db_role.resources.extend(resources)
+        await db.commit()
+        # await db.refresh(db_role)
+
     return {"message": "Role updated"}
 
 
