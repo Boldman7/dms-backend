@@ -1,10 +1,10 @@
 from datetime import datetime
 from typing import Annotated, List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
-
+from ..permission.resource import ResourceRead
 
 class CompanyBase(BaseModel):
     name: Annotated[str, Field(examples=["company name"])]
@@ -16,6 +16,9 @@ class CompanyBase(BaseModel):
     email: str | None = None
     phone_number: str | None = None
     is_end_user: Annotated[int, Field(examples=[0, 1])]
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class Company(TimestampSchema, CompanyBase, UUIDSchema, PersistentDeletion):
     pass
@@ -29,16 +32,25 @@ class CompanyRead(CompanyBase):
     updated_at: datetime | None
 
 
+class CompanyReadJoined(CompanyBase):
+    id: int
+    resources: List[ResourceRead] = Field(default_factory=list)
+
+    update_user: int | None
+    created_at: datetime
+    updated_at: datetime | None
+
+
 class CompanyCreate(CompanyBase):
-    pass
+    resources: List[int] = Field(default_factory=list)
 
 
-class CompanyCreateInternal(CompanyCreate):
+class CompanyCreateInternal(CompanyBase):
     update_user: int | None
 
 
 class CompanyUpdate(CompanyBase):
-    pass
+    resources: List[int] = Field(default_factory=list)
 
 
 class CompanyUpdateInternal(CompanyUpdate):
@@ -53,6 +65,7 @@ class CompanyDelete(BaseModel):
 
 class CompanyTreeNode(CompanyRead):
     children: List["CompanyTreeNode"] = []
+
 
 # Update forward references
 CompanyTreeNode.model_rebuild()

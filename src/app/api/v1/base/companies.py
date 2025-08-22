@@ -1,12 +1,16 @@
-from typing import Annotated, List, cast
+from typing import Annotated, List, cast, Optional
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import Row, select
+from sqlalchemy.orm import selectinload
 
 from ....core.db.database import async_get_db
-from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
+from ....core.exceptions.http_exceptions import NotFoundException
 from ....crud.base.crud_companies import crud_companies
-from ....schemas.base.company import CompanyCreate, CompanyCreateInternal, CompanyRead, CompanyUpdate, CompanyTreeNode
+from ....schemas.base.company import CompanyCreate, CompanyCreateInternal, CompanyRead, CompanyReadJoined, CompanyUpdate, CompanyTreeNode
+from ....models.base.company import Company
+from ....models.permission.resource import Resource
 
 router = APIRouter(tags=["companies"])
 
@@ -17,15 +21,25 @@ async def write_company(
 ) -> CompanyRead:
     company_internal_dict = company.model_dump()
 
+    resources = company_internal_dict.pop("resources", [])
     company_internal_dict["update_user"] = None
+
     company_internal = CompanyCreateInternal(**company_internal_dict)
     created_company = await crud_companies.create(db=db, object=company_internal)
 
-    company_read = await crud_companies.get(db=db, id=created_company.id, schema_to_select=CompanyRead)
-    if company_read is None:
+    if created_company is None:
         raise NotFoundException("Created company not found")
+    
+    if resources:
+        result = await db.execute(select(Resource).where(Resource.id.in_(resources)))
+        resources = result.scalars().all()
+        created_company.resources.extend(resources)
+        await db.commit()
+        await db.refresh(created_company)
 
-    return cast(CompanyRead, company_read)
+    created_company.resources = resources
+
+    return cast(CompanyRead, created_company)
 
 
 # unpaginated response for companies
@@ -39,24 +53,41 @@ async def read_companies(
     return response
 
 
-@router.get("/company/{id}", response_model=CompanyRead)
-async def read_company(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> CompanyRead:
-    db_company = await crud_companies.get(db=db, id=id, is_deleted=False, schema_to_select=CompanyRead)
-    if db_company is None:
+@router.get("/company/{id}", response_model=CompanyReadJoined)
+async def read_company(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> CompanyReadJoined:
+    result = await db.execute(
+        select(Company)
+        .options(selectinload(Company.resources))   # <-- eager load roles
+        .where(Company.is_deleted == False, Company.id == id)
+    )
+    company: Optional[Row] = result.scalars().first()
+
+    if company is None:
         raise NotFoundException("Company not found")
 
-    return cast(CompanyRead, db_company)
+    return cast(CompanyReadJoined, company)
 
 
 @router.patch("/company/{id}")
 async def patch_company(
     request: Request, id: int, values: CompanyUpdate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> dict[str, str]:
-    db_company = await crud_companies.get(db=db, id=id, schema_to_select=CompanyRead)
+    db_company = await db.get(Company, id)
     if db_company is None:
         raise NotFoundException("Company not found")
 
+    resources = values.resources
+    del values.resources
     await crud_companies.update(db=db, object=values, id=id)
+    db_company.resources.clear()  # Clear existing resources
+
+    if resources:
+        result = await db.execute(select(Resource).where(Resource.id.in_(resources)))
+        resources = result.scalars().all()
+        db_company.resources.extend(resources)
+        await db.commit()
+        # await db.refresh(db_company)
+
     return {"message": "Company updated"}
 
 

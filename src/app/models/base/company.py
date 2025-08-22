@@ -1,9 +1,10 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, String, Integer, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...core.db.database import Base
+from ..permission.resource import company_resource
 
 
 class Company(Base):
@@ -19,7 +20,15 @@ class Company(Base):
     address: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     email: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     phone_number: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
-    
+    resources: Mapped[list["Resource"]] = relationship(
+        "Resource",
+        secondary=company_resource,
+        back_populates="companies",
+        lazy="selectin",
+        default_factory=list
+    )
+    roles: Mapped[list["Role"]] = relationship("Role", back_populates="company", default_factory=list)
+
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default_factory=lambda: datetime.now(UTC))

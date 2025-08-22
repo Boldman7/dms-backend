@@ -1,7 +1,6 @@
 from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, Request, Query
-from fastcrud import JoinConfig
 from fastcrud.paginated import PaginatedListResponse, compute_offset, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -13,10 +12,8 @@ from ...core.exceptions.http_exceptions import DuplicateValueException, Forbidde
 from ...core.security import blacklist_token, get_password_hash, oauth2_scheme
 from ...crud.crud_users import crud_users
 from ...schemas.user import UserCreate, UserCreateInternal, UserRead, UserUpdate
-from ...schemas.permission.role import RoleRead
 from ...models.permission.role import Role
 from ...models.user import User
-from ...models.user_role import user_role
 
 router = APIRouter(tags=["users"])
 
@@ -48,15 +45,15 @@ async def write_user(
     user_internal = UserCreateInternal(**user_internal_dict)
     created_user = await crud_users.create(db=db, object=user_internal)
 
+    if created_user is None:
+        raise NotFoundException("Created user not found")
+    
     if roles:
         result = await db.execute(select(Role).where(Role.id.in_(roles)))
         roles = result.scalars().all()
         created_user.roles.extend(roles)
         await db.commit()
         await db.refresh(created_user)
-
-    if created_user is None:
-        raise NotFoundException("Created user not found")
     
     created_user.roles = roles
 
@@ -70,14 +67,13 @@ async def read_users(
     page: int | None = Query(1),
     items_per_page: int | None = Query(10)
 ) -> dict:
-    stmt = (
+    result = await db.execute(
         select(User)
         .options(selectinload(User.roles))   # <-- eager load roles
         .offset(compute_offset(page, items_per_page))
         .limit(items_per_page)
         .where(User.is_deleted == False, User.name.contains(name))
     )
-    result = await db.execute(stmt)
     users = result.scalars().all()
 
     users_data = {}
@@ -118,7 +114,7 @@ async def patch_user(
     # if db_user.username != current_user["username"]:
         # raise ForbiddenException()
 
-    if values.name and values.name != db_user["name"]:
+    if values.name and values.name != db_user.name:
         existing_user = await crud_users.get(db=db, name=values.name)
         if existing_user:
             if existing_user["is_deleted"]:
@@ -126,7 +122,7 @@ async def patch_user(
             else:
                 raise DuplicateValueException("User Name not available")
 
-    if values.email and values.email != db_user["email"]:
+    if values.email and values.email != db_user.email:
         existing_user = await crud_users.get(db=db, email=values.email)
         if existing_user:
             if existing_user["is_deleted"]:

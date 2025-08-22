@@ -1,10 +1,11 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, List
 
 from pydantic import BaseModel, Field, ConfigDict
 
 from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 from ..base.company import CompanyRead
+from .resource import ResourceRead
 
 class RoleBase(BaseModel):
     name: Annotated[str, Field(examples=["role name"])]
@@ -29,13 +30,16 @@ class RoleRead(RoleBase):
 
 class RoleReadJoined(RoleRead):
     company: CompanyRead
+    resources: List[ResourceRead] = Field(default_factory=list)
 
 
 class RoleCreate(RoleBase):
     public_type: Annotated[int, Field(examples=[1, 2])]
+    resources: List[int] = Field(default_factory=list)
 
 
-class RoleCreateInternal(RoleCreate):
+class RoleCreateInternal(RoleBase):
+    public_type: Annotated[int, Field(examples=[1, 2])]
     update_user: int | None
 
 

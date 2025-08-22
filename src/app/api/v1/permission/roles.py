@@ -1,8 +1,10 @@
-from typing import Annotated, Any
+from typing import Annotated, Any, cast, Optional
 
 from fastapi import APIRouter, Depends, Request, Query
 from fastcrud.paginated import PaginatedListResponse, compute_offset, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, Row
+from sqlalchemy.orm import selectinload
 
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
@@ -10,6 +12,8 @@ from ....crud.permission.crud_roles import crud_roles
 from ....schemas.permission.role import RoleCreate, RoleCreateInternal, RoleRead, RoleReadJoined, RoleUpdate
 from ....schemas.base.company import CompanyRead
 from ....models.base.company import Company
+from ....models.permission.resource import Resource
+from ....models.permission.role import Role
 
 router = APIRouter(tags=["roles"])
 
@@ -26,23 +30,26 @@ async def write_role(
         else:
             raise DuplicateValueException("Role Name not available")
         
+    resources = role_internal_dict.pop("resources", [])
     role_internal_dict["update_user"] = None
+
     role_internal = RoleCreateInternal(**role_internal_dict)
     created_role = await crud_roles.create(db=db, object=role_internal)
 
-    role_read = await crud_roles.get_joined(
-        db=db,
-        id=created_role.id,
-        join_model=Company,
-        join_schema_to_select=CompanyRead,
-        nest_joins=True,
-        schema_to_select=RoleReadJoined,
-        is_deleted=False,
-    )
-    if role_read is None:
+    print(created_role)
+
+    # result = await db.execute(select(Resource).where(Resource.id.in_(resources)))
+    # resources = result.scalars().all()
+    # created_role.resources.extend(resources)
+    # await db.commit()
+    # await db.refresh(created_role)
+    
+    # created_role.resources = resources
+
+    if role is None:
         raise NotFoundException("Created role not found")
 
-    return role_read
+    return cast(RoleReadJoined, created_role)
 
 
 # paginated response for roles
@@ -53,17 +60,21 @@ async def read_roles(
     page: int | None = Query(1),
     items_per_page: int | None = Query(10)
 ) -> dict:
-    roles_data = await crud_roles.get_multi_joined(
-        db=db,
-        join_model=Company,
-        join_schema_to_select=CompanyRead,
-        nest_joins=True,
-        schema_to_select=RoleReadJoined,
-        offset=compute_offset(page, items_per_page),
-        limit=items_per_page,
-        name__contains=name,
-        is_deleted=False,
+    result = await db.execute(
+        select(Role)
+        .options(
+            selectinload(Role.resources),   # eager load resources
+            selectinload(Role.company)      # eager load company
+        )
+        .offset(compute_offset(page, items_per_page))
+        .limit(items_per_page)
+        .where(Role.is_deleted == False, Role.name.contains(name))
     )
+    roles = result.scalars().all()
+
+    roles_data = {}
+    roles_data["data"] = roles
+    roles_data["total_count"] = await crud_roles.count(db=db, is_deleted=False, name__contains=name)
 
     response: dict[str, Any] = paginated_response(crud_data=roles_data, page=page, items_per_page=items_per_page)
     return response

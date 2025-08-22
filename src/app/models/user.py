@@ -4,7 +4,7 @@ from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..core.db.database import Base
-from .user_role import user_role
+from .permission.role import user_role
 
 
 class User(Base):
