@@ -21,7 +21,7 @@ class Role(Base):
     id: Mapped[int] = mapped_column("id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False)
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     company_id: Mapped[int] = mapped_column(ForeignKey("company.id"), index=True, nullable=False)
-    company: Mapped["Company"] = relationship("Company", back_populates="roles", init=False)
+    company: Mapped["Company"] = relationship("Company", back_populates="roles", foreign_keys=[company_id], init=False)
     public_type: Mapped[int] = mapped_column(Integer, nullable=False)
     users: Mapped[list["User"]] = relationship(
         "User",

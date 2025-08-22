@@ -11,6 +11,7 @@ class UserBase(BaseModel):
     name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"])]
     username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
     email: Annotated[EmailStr, Field(examples=["user.userson@example.com"])]
+    company_id: int
     phone_number: str | None = None
     office_number: str | None = None
 
@@ -44,7 +45,7 @@ class UserUpdate(UserBase):
     roles: List[int] = Field(default_factory=list)
 
 
-class UserUpdateInternal(UserUpdate):
+class UserUpdateInternal(UserBase):
     update_user: int | None
     updated_at: datetime
 

@@ -53,24 +53,40 @@ async def write_role(
 async def read_roles(
     db: Annotated[AsyncSession, Depends(async_get_db)],
     name: str = Query(""),
+    company_id: int | None = Query(None),
     page: int | None = Query(1),
     items_per_page: int | None = Query(10)
 ) -> dict:
-    result = await db.execute(
-        select(Role)
-        .options(
-            selectinload(Role.resources),   # eager load resources
-            selectinload(Role.company)      # eager load company
+    if company_id:
+        result = await db.execute(
+            select(Role)
+            .options(
+                selectinload(Role.resources),   # eager load resources
+                selectinload(Role.company)      # eager load company
+            )
+            .offset(compute_offset(page, items_per_page))
+            .limit(items_per_page)
+            .where(Role.is_deleted == False, Role.name.contains(name), Role.company_id == company_id)
         )
-        .offset(compute_offset(page, items_per_page))
-        .limit(items_per_page)
-        .where(Role.is_deleted == False, Role.name.contains(name))
-    )
+        total_count = await crud_roles.count(db=db, is_deleted=False, name__contains=name, company_id=company_id)
+    else:
+        result = await db.execute(
+            select(Role)
+            .options(
+                selectinload(Role.resources),   # eager load resources
+                selectinload(Role.company)      # eager load company
+            )
+            .offset(compute_offset(page, items_per_page))
+            .limit(items_per_page)
+            .where(Role.is_deleted == False, Role.name.contains(name))
+        )
+        total_count = await crud_roles.count(db=db, is_deleted=False, name__contains=name)
+    
     roles = result.scalars().all()
 
     roles_data = {}
     roles_data["data"] = roles
-    roles_data["total_count"] = await crud_roles.count(db=db, is_deleted=False, name__contains=name)
+    roles_data["total_count"] = total_count
 
     response: dict[str, Any] = paginated_response(crud_data=roles_data, page=page, items_per_page=items_per_page)
     return response
@@ -78,19 +94,17 @@ async def read_roles(
 
 @router.get("/role/{id}", response_model=RoleReadJoined)
 async def read_role(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> RoleReadJoined:
-    db_role = await crud_roles.get_joined(
-        db=db,
-        id=id,
-        join_model=Company,
-        join_schema_to_select=CompanyRead,
-        nest_joins=True,
-        schema_to_select=RoleReadJoined,
-        is_deleted=False,
+    result = await db.execute(
+        select(Role)
+        .options(selectinload(Role.resources))   # <-- eager load roles
+        .where(Role.is_deleted == False, Role.id == id)
     )
-    if db_role is None:
+    role: Optional[Row] = result.scalars().first()
+
+    if role is None:
         raise NotFoundException("Role not found")
 
-    return db_role
+    return cast(RoleReadJoined, role)
 
 
 @router.patch("/role/{id}")

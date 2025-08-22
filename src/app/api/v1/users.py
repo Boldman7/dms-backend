@@ -64,21 +64,40 @@ async def write_user(
 async def read_users(
     db: Annotated[AsyncSession, Depends(async_get_db)],
     name: str = Query(""),
+    company_id: int | None = Query(None),
     page: int | None = Query(1),
     items_per_page: int | None = Query(10)
 ) -> dict:
-    result = await db.execute(
-        select(User)
-        .options(selectinload(User.roles))   # <-- eager load roles
-        .offset(compute_offset(page, items_per_page))
-        .limit(items_per_page)
-        .where(User.is_deleted == False, User.name.contains(name))
-    )
+    if company_id:
+        result = await db.execute(
+            select(User)
+            .options(
+                selectinload(User.roles),
+                selectinload(User.company)
+            )
+            .offset(compute_offset(page, items_per_page))
+            .limit(items_per_page)
+            .where(User.is_deleted == False, User.name.contains(name), User.company_id == company_id)
+        )
+        total_count = await crud_users.count(db=db, is_deleted=False, name__contains=name, company_id=company_id)
+    else:
+        result = await db.execute(
+            select(User)
+            .options(
+                selectinload(User.roles),
+                selectinload(User.company)
+            )
+            .offset(compute_offset(page, items_per_page))
+            .limit(items_per_page)
+            .where(User.is_deleted == False, User.name.contains(name))
+        )
+        total_count = await crud_users.count(db=db, is_deleted=False, name__contains=name)
+
     users = result.scalars().all()
 
     users_data = {}
     users_data["data"] = users
-    users_data["total_count"] = await crud_users.count(db=db, is_deleted=False, name__contains=name)
+    users_data["total_count"] = total_count
 
     response: dict[str, Any] = paginated_response(crud_data=users_data, page=page, items_per_page=items_per_page)
     return response

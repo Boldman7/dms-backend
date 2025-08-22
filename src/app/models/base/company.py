@@ -5,6 +5,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...core.db.database import Base
 from ..permission.resource import company_resource
+from ..user import User
+from ..permission.role import Role
 
 
 class Company(Base):
@@ -12,6 +14,8 @@ class Company(Base):
 
     id: Mapped[int] = mapped_column("id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False)
     name: Mapped[str] = mapped_column(String, nullable=False, unique=False)
+    users: Mapped[list["User"]] = relationship("User", back_populates="company", foreign_keys=[User.company_id], init=False)
+    roles: Mapped[list["Role"]] = relationship("Role", back_populates="company", foreign_keys=[Role.company_id], init=False)
     is_end_user: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("company.id"), index=True, nullable=True, default=None)
     province: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
@@ -27,7 +31,6 @@ class Company(Base):
         lazy="selectin",
         default_factory=list
     )
-    roles: Mapped[list["Role"]] = relationship("Role", back_populates="company", default_factory=list)
 
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
 

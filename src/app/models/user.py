@@ -16,6 +16,8 @@ class User(Base):
     username: Mapped[str] = mapped_column(String(20), unique=True, index=True)
     email: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     hashed_password: Mapped[str] = mapped_column(String)
+    company_id: Mapped[int] = mapped_column(ForeignKey("company.id"), index=True, nullable=False)
+    company: Mapped["Company"] = relationship("Company", back_populates="users", foreign_keys=[company_id], init=False)
     roles: Mapped[list["Role"]] = relationship(
         "Role",
         secondary=user_role,
