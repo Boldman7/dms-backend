@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from ..core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 from .permission.role import RoleRead
+from .base.company import CompanyRead
 
 
 class UserBase(BaseModel):
@@ -25,6 +26,10 @@ class User(TimestampSchema, UserBase, UUIDSchema, PersistentDeletion):
 
 class UserRead(UserBase):
     id: int
+
+
+class UserReadJoined(UserRead):
+    company: CompanyRead
     roles: List[RoleRead] = Field(default_factory=list)
 
 

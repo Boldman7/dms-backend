@@ -11,7 +11,7 @@ from ...core.db.database import async_get_db
 from ...core.exceptions.http_exceptions import DuplicateValueException, ForbiddenException, NotFoundException
 from ...core.security import blacklist_token, get_password_hash, oauth2_scheme
 from ...crud.crud_users import crud_users
-from ...schemas.user import UserCreate, UserCreateInternal, UserRead, UserUpdate
+from ...schemas.user import UserCreate, UserCreateInternal, UserRead, UserReadJoined, UserUpdate
 from ...models.permission.role import Role
 from ...models.user import User
 
@@ -60,7 +60,7 @@ async def write_user(
     return cast(UserRead, created_user)
 
 
-@router.get("/users", response_model=PaginatedListResponse[UserRead])
+@router.get("/users", response_model=PaginatedListResponse[UserReadJoined])
 async def read_users(
     db: Annotated[AsyncSession, Depends(async_get_db)],
     name: str = Query(""),
