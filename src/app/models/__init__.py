@@ -22,3 +22,4 @@ from .equipment.product import Product
 from .permission.license import License
 from .permission.role import Role
 from .permission.resource import Resource
+from .permission.record import Record
