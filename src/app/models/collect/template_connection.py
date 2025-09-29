@@ -6,13 +6,12 @@ from sqlalchemy.orm import Mapped, mapped_column
 from ...core.db.database import Base
 
 
-class Connection(Base):
-    __tablename__ = "connection"
+class TemplateConnection(Base):
+    __tablename__ = "template_connection"
 
     id: Mapped[int] = mapped_column("id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False)
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    smart_hardware_id: Mapped[int] = mapped_column(ForeignKey("smart_hardware.id"), index=True, nullable=False)
-    template_connection_id: Mapped[int] = mapped_column(ForeignKey("template_connection.id"), index=True, nullable=False)
+    template_id: Mapped[int] = mapped_column(ForeignKey("template.id"), index=True, nullable=False)
     plc_type_id: Mapped[int] = mapped_column(ForeignKey("plc_type.id"), index=True, nullable=False)
     ip_address: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     port: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)

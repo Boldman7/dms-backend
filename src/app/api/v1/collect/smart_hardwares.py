@@ -7,9 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_smart_hardwares import crud_smart_hardwares
-from ....schemas.collect.smart_hardware import SmartHardwareCreate, SmartHardwareCreateInternal, SmartHardwareRead, SmartHardwareUpdate
+from ....crud.collect.crud_connections import crud_connections
+from ....crud.collect.crud_template_connections import crud_template_connections
+from ....schemas.collect.smart_hardware import SmartHardwareCreate, SmartHardwareCreateInternal, SmartHardwareRead, SmartHardwareUpdate, SmartHardwareSelectTemplate
 from ....schemas.base.company import CompanyRead
+from ....schemas.collect.connection import ConnectionCreateInternal
 from ....models.base.company import Company
+from ....models.collect.connection import Connection
+from ....models.collect.template_connection import TemplateConnection
 
 router = APIRouter(tags=["smart_hardwares"])
 
@@ -100,6 +105,34 @@ async def patch_smart_hardware(
                 await crud_smart_hardwares.db_delete(db=db, id=existing_smart_hardware["id"])
             else:
                 raise DuplicateValueException("SmartHardware Name not available")
+
+    await crud_smart_hardwares.update(db=db, object=values, id=id)
+    return {"message": "SmartHardware updated"}
+
+
+@router.post("/smart-hardware/select-template/{id}")
+async def select_template(
+    request: Request, id: int, values: SmartHardwareSelectTemplate, db: Annotated[AsyncSession, Depends(async_get_db)]
+) -> dict[str, str]:
+    db_smart_hardware = await crud_smart_hardwares.get(db=db, id=id, schema_to_select=SmartHardwareRead)
+    if db_smart_hardware is None or db_smart_hardware["is_deleted"]:
+        raise NotFoundException("SmartHardware not found")
+
+    connections = await crud_template_connections.get_multi(
+        db=db,
+        template_id=SmartHardwareSelectTemplate["template_id"],
+        is_deleted=False
+    )
+
+    for connection in connections:
+        connection_internal_dict = connection.model_dump()
+        connection_internal_dict["update_user"] = None
+        connection_internal_dict["template_connection_id"] = connection_internal_dict["id"]
+        connection_internal_dict["smart_hardware_id"] = id
+        del connection_internal_dict["id"]
+
+        connection_internal = ConnectionCreateInternal(**connection_internal_dict)
+        await crud_connections.create(db = db, object=connection_internal)
 
     await crud_smart_hardwares.update(db=db, object=values, id=id)
     return {"message": "SmartHardware updated"}

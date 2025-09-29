@@ -48,6 +48,8 @@ class SmartHardwareUpdateInternal(SmartHardwareUpdate):
     update_user: int | None
     updated_at: datetime
 
+class SmartHardwareSelectTemplate(BaseModel):
+    template_id: int
 
 class SmartHardwareDelete(BaseModel):
     is_deleted: bool

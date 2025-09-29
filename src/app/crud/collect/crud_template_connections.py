@@ -1,0 +1,7 @@
+from fastcrud import FastCRUD
+
+from ...models.collect.template_connection import TemplateConnection
+from ...schemas.collect.template_connection import TemplateConnectionCreateInternal, TemplateConnectionDelete, TemplateConnectionRead, TemplateConnectionUpdate, TemplateConnectionUpdateInternal
+
+CRUDTemplateConnection = FastCRUD[TemplateConnection, TemplateConnectionCreateInternal, TemplateConnectionUpdate, TemplateConnectionUpdateInternal, TemplateConnectionDelete, TemplateConnectionRead]
+crud_template_connections = CRUDTemplateConnection(TemplateConnection)

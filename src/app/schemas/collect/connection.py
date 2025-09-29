@@ -8,7 +8,7 @@ from .plc_type import PlcTypeRead
 
 
 class ConnectionBase(BaseModel):
-    name: Annotated[str, Field(examples=["connection name"])]
+    name: Annotated[str, Field(examples=["template connection name"])]
     plc_type_id: int
     ip_address: str | None = None
     port: int | None = None
@@ -20,23 +20,26 @@ class Connection(TimestampSchema, ConnectionBase, UUIDSchema, PersistentDeletion
 
 class ConnectionRead(ConnectionBase):
     id: int
-    plc_type: PlcTypeRead
 
     update_user: int | None
     created_at: datetime
     updated_at: datetime | None
 
 
+class ConnectionReadJoined(ConnectionRead):
+    plc_type: PlcTypeRead
+
 class ConnectionCreate(ConnectionBase):
-    template_id: int
+    smart_hardware_id: int
+    template_connection_id: int
 
 
 class ConnectionCreateInternal(ConnectionCreate):
     update_user: int | None
 
 
-class ConnectionUpdate(ConnectionBase):
-    pass
+class ConnectionUpdate(BaseModel):
+    ip_address: str
 
 
 class ConnectionUpdateInternal(ConnectionUpdate):
