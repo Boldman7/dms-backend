@@ -114,19 +114,23 @@ async def patch_smart_hardware(
 async def select_template(
     request: Request, id: int, values: SmartHardwareSelectTemplate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> dict[str, str]:
+    template_id = values.model_dump()["template_id"]
     db_smart_hardware = await crud_smart_hardwares.get(db=db, id=id, schema_to_select=SmartHardwareReadJoined)
     if db_smart_hardware is None:
         raise NotFoundException("SmartHardware not found")
+    
+    if(template_id == db_smart_hardware["template_id"]):
+        return {"message": "That template is already selected"}
 
     connections = await crud_template_connections.get_multi(
         db=db,
-        template_id=values.model_dump()["template_id"],
+        template_id=template_id,
         is_deleted=False
     )
-    print(connections["data"])
+
+    await crud_connections.db_delete(db=db, smart_hardware_id=id, allow_multiple=True)
 
     for connection in connections["data"]:
-        # print(connection)
         connection_internal_dict = connection
         connection_internal_dict["update_user"] = None
         connection_internal_dict["template_connection_id"] = connection_internal_dict["id"]
