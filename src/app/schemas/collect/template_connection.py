@@ -20,19 +20,14 @@ class TemplateConnection(TimestampSchema, TemplateConnectionBase, UUIDSchema, Pe
 
 class TemplateConnectionRead(TemplateConnectionBase):
     id: int
+
+    update_user: int | None
+    created_at: datetime
+    updated_at: datetime | None
+
+
+class TemplateConnectionReadJoined(TemplateConnectionRead):
     plc_type: PlcTypeRead
-
-    update_user: int | None
-    created_at: datetime
-    updated_at: datetime | None
-
-
-class TemplateConnectionReadJoined(TemplateConnectionBase):
-    id: int
-
-    update_user: int | None
-    created_at: datetime
-    updated_at: datetime | None
 
 
 class TemplateConnectionCreate(TemplateConnectionBase):
