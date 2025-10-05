@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from ...core.schemas import PersistentDeletion, TimestampSchema, UUIDSchema
 from ..base.company import CompanyRead
+# from .template import TemplateRead
 
 
 class SmartHardwareBase(BaseModel):
@@ -20,14 +21,17 @@ class SmartHardware(TimestampSchema, SmartHardwareBase, UUIDSchema, PersistentDe
 class SmartHardwareRead(SmartHardwareBase):
     id: int
     code: Annotated[str, Field(examples=["smart hardware code"])]
-    company: CompanyRead
     template_id: int | None
-    smart_hardware_type_id: int | None
     sync_status: int | None
 
     update_user: int | None
     created_at: datetime
     updated_at: datetime | None
+
+
+class SmartHardwareReadJoined(SmartHardwareRead):
+    # template: TemplateRead | None
+    company: CompanyRead
 
 
 class SmartHardwareCreate(SmartHardwareBase):

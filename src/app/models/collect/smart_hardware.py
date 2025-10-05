@@ -18,7 +18,6 @@ class SmartHardware(Base):
     status: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     upgrade_status: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     template_id: Mapped[int | None] = mapped_column(ForeignKey("template.id"), index=True, nullable=True, default=None)
-    smart_hardware_type_id: Mapped[int | None] = mapped_column(ForeignKey("smart_hardware_type.id"), index=True, nullable=True, default=None)
     
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
 

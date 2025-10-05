@@ -9,7 +9,7 @@ from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoun
 from ....crud.collect.crud_smart_hardwares import crud_smart_hardwares
 from ....crud.collect.crud_connections import crud_connections
 from ....crud.collect.crud_template_connections import crud_template_connections
-from ....schemas.collect.smart_hardware import SmartHardwareCreate, SmartHardwareCreateInternal, SmartHardwareRead, SmartHardwareUpdate, SmartHardwareSelectTemplate
+from ....schemas.collect.smart_hardware import SmartHardwareCreate, SmartHardwareCreateInternal, SmartHardwareReadJoined, SmartHardwareUpdate, SmartHardwareSelectTemplate
 from ....schemas.base.company import CompanyRead
 from ....schemas.collect.connection import ConnectionCreateInternal
 from ....models.base.company import Company
@@ -22,7 +22,7 @@ router = APIRouter(tags=["smart_hardwares"])
 @router.post("/smart-hardware", status_code=201)
 async def write_smart_hardware(
     request: Request, smart_hardware: SmartHardwareCreate, db: Annotated[AsyncSession, Depends(async_get_db)]
-) -> SmartHardwareRead:
+) -> SmartHardwareReadJoined:
     smart_hardware_internal_dict = smart_hardware.model_dump()
     db_smart_hardware = await crud_smart_hardwares.get(db=db, name=smart_hardware_internal_dict["name"])
     if db_smart_hardware:
@@ -41,16 +41,16 @@ async def write_smart_hardware(
         join_model=Company,
         join_schema_to_select=CompanyRead,
         nest_joins=True,
-        schema_to_select=SmartHardwareRead
+        schema_to_select=SmartHardwareReadJoined
     )
     if smart_hardware_read is None:
         raise NotFoundException("Created smart_hardware not found")
 
-    return cast(SmartHardwareRead, smart_hardware_read)
+    return cast(SmartHardwareReadJoined, smart_hardware_read)
 
 
 # paginated response for smart_hardwares
-@router.get("/smart-hardwares", response_model=PaginatedListResponse[SmartHardwareRead])
+@router.get("/smart-hardwares", response_model=PaginatedListResponse[SmartHardwareReadJoined])
 async def read_smart_hardwares(
     db: Annotated[AsyncSession, Depends(async_get_db)],
     keyword: str = Query(""),
@@ -62,7 +62,7 @@ async def read_smart_hardwares(
         join_model=Company,
         join_schema_to_select=CompanyRead,
         nest_joins=True,
-        schema_to_select=SmartHardwareRead,
+        schema_to_select=SmartHardwareReadJoined,
         offset=compute_offset(page, items_per_page),
         limit=items_per_page,
         name__contains=keyword,
@@ -73,28 +73,28 @@ async def read_smart_hardwares(
     return response
 
 
-@router.get("/smart-hardware/{id}", response_model=SmartHardwareRead)
-async def read_smart_hardware(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> SmartHardwareRead:
+@router.get("/smart-hardware/{id}", response_model=SmartHardwareReadJoined)
+async def read_smart_hardware(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> SmartHardwareReadJoined:
     db_smart_hardware = await crud_smart_hardwares.get_joined(
         db=db,
         id=id,
         join_model=Company,
         join_schema_to_select=CompanyRead,
         nest_joins=True,
-        schema_to_select=SmartHardwareRead,
+        schema_to_select=SmartHardwareReadJoined,
         is_deleted=False,
     )
     if db_smart_hardware is None:
         raise NotFoundException("SmartHardware not found")
 
-    return cast(SmartHardwareRead, db_smart_hardware)
+    return cast(SmartHardwareReadJoined, db_smart_hardware)
 
 
 @router.patch("/smart-hardware/{id}")
 async def patch_smart_hardware(
     request: Request, id: int, values: SmartHardwareUpdate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> dict[str, str]:
-    db_smart_hardware = await crud_smart_hardwares.get(db=db, id=id, schema_to_select=SmartHardwareRead)
+    db_smart_hardware = await crud_smart_hardwares.get(db=db, id=id, schema_to_select=SmartHardwareReadJoined)
     if db_smart_hardware is None:
         raise NotFoundException("SmartHardware not found")
 
@@ -114,18 +114,20 @@ async def patch_smart_hardware(
 async def select_template(
     request: Request, id: int, values: SmartHardwareSelectTemplate, db: Annotated[AsyncSession, Depends(async_get_db)]
 ) -> dict[str, str]:
-    db_smart_hardware = await crud_smart_hardwares.get(db=db, id=id, schema_to_select=SmartHardwareRead)
-    if db_smart_hardware is None or db_smart_hardware["is_deleted"]:
+    db_smart_hardware = await crud_smart_hardwares.get(db=db, id=id, schema_to_select=SmartHardwareReadJoined)
+    if db_smart_hardware is None:
         raise NotFoundException("SmartHardware not found")
 
     connections = await crud_template_connections.get_multi(
         db=db,
-        template_id=SmartHardwareSelectTemplate["template_id"],
+        template_id=values.model_dump()["template_id"],
         is_deleted=False
     )
+    print(connections["data"])
 
-    for connection in connections:
-        connection_internal_dict = connection.model_dump()
+    for connection in connections["data"]:
+        # print(connection)
+        connection_internal_dict = connection
         connection_internal_dict["update_user"] = None
         connection_internal_dict["template_connection_id"] = connection_internal_dict["id"]
         connection_internal_dict["smart_hardware_id"] = id
@@ -135,12 +137,12 @@ async def select_template(
         await crud_connections.create(db = db, object=connection_internal)
 
     await crud_smart_hardwares.update(db=db, object=values, id=id)
-    return {"message": "SmartHardware updated"}
+    return {"message": "Template is selected"}
 
 
 @router.delete("/smart-hardware/{id}")
 async def erase_smart_hardware(request: Request, id: int, db: Annotated[AsyncSession, Depends(async_get_db)]) -> dict[str, str]:
-    db_smart_hardware = await crud_smart_hardwares.get(db=db, id=id, schema_to_select=SmartHardwareRead)
+    db_smart_hardware = await crud_smart_hardwares.get(db=db, id=id, schema_to_select=SmartHardwareReadJoined)
     if db_smart_hardware is None:
         raise NotFoundException("SmartHardware not found")
 
