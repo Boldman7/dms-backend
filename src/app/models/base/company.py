@@ -31,6 +31,7 @@ class Company(Base):
         lazy="selectin",
         default_factory=list
     )
+    smart_hardwares = relationship("SmartHardware", back_populates="company")
 
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
 

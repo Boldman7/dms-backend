@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, String, Integer, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...core.db.database import Base
 
@@ -18,7 +18,9 @@ class SmartHardware(Base):
     status: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     upgrade_status: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     template_id: Mapped[int | None] = mapped_column(ForeignKey("template.id"), index=True, nullable=True, default=None)
-    
+    connections = relationship("Connection", back_populates="smart_hardware")
+    company = relationship("Company", back_populates="smart_hardwares")
+
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default_factory=lambda: datetime.now(UTC))

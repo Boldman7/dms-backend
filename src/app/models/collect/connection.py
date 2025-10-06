@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, String, Integer, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...core.db.database import Base
 
@@ -12,8 +12,10 @@ class Connection(Base):
     id: Mapped[int] = mapped_column("id", autoincrement=True, nullable=False, unique=True, primary_key=True, init=False)
     name: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     smart_hardware_id: Mapped[int] = mapped_column(ForeignKey("smart_hardware.id"), index=True, nullable=False)
+    smart_hardware = relationship("SmartHardware", back_populates="connections")
     template_connection_id: Mapped[int] = mapped_column(ForeignKey("template_connection.id"), index=True, nullable=False)
     plc_type_id: Mapped[int] = mapped_column(ForeignKey("plc_type.id"), index=True, nullable=False)
+    plc_type = relationship("PlcType", back_populates="connections")
     ip_address: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     port: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
     station_number: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
@@ -25,4 +27,3 @@ class Connection(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
     is_deleted: Mapped[bool] = mapped_column(default=False, index=True)
-    

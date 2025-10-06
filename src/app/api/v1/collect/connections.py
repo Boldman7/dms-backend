@@ -1,14 +1,19 @@
 from typing import Annotated, List, cast
 
 from fastapi import APIRouter, Depends, Request, Query
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_connections import crud_connections
 from ....schemas.collect.connection import ConnectionCreate, ConnectionCreateInternal, ConnectionReadJoined, ConnectionUpdate
-from ....schemas.collect.plc_type import PlcTypeRead
+from ....models.collect.connection import Connection
 from ....models.collect.plc_type import PlcType
+from ....schemas.collect.plc_type import PlcTypeRead
+from ....models.collect.smart_hardware import SmartHardware
+from ....schemas.collect.smart_hardware import SmartHardwareReadJoined
 
 router = APIRouter(tags=["connections"])
 
@@ -44,31 +49,34 @@ router = APIRouter(tags=["connections"])
 
 
 # unpaginated response for connections
-@router.get("/connections", response_model=dict[str, List[ConnectionReadJoined]])
+@router.get("/connections", response_model=dict[str, List[ConnectionReadJoined] | int])
 async def read_connections(
     db: Annotated[AsyncSession, Depends(async_get_db)],
-    smart_hardware_id: int = Query(None)
-) -> dict[str, List[ConnectionReadJoined]]:
+    smart_hardware_id: int = Query(None),
+    page: int = Query(1, ge=1),
+    items_per_page: int = Query(10, ge=1)
+) -> dict[str, List[ConnectionReadJoined] | int]:
+    offset = (page - 1) * items_per_page
+    query = (
+        select(Connection)
+        .options(
+            selectinload(Connection.plc_type),
+            selectinload(Connection.smart_hardware).selectinload(SmartHardware.company)
+        )
+        .where(Connection.is_deleted == False)
+        .offset(offset)
+        .limit(items_per_page)
+    )
     if smart_hardware_id:
-        connections_data = await crud_connections.get_multi_joined(
-            db=db,
-            smart_hardware_id=smart_hardware_id,
-            join_model=PlcType,
-            join_schema_to_select=PlcTypeRead,
-            nest_joins=True,
-            schema_to_select=ConnectionReadJoined,
-            is_deleted=False
-        )
-    else:
-        connections_data = await crud_connections.get_multi_joined(
-            db=db,
-            join_model=PlcType,
-            join_schema_to_select=PlcTypeRead,
-            nest_joins=True,
-            schema_to_select=ConnectionReadJoined,
-            is_deleted=False
-        )
-    response: dict[str, List[ConnectionReadJoined]] = {"data": cast(List[ConnectionReadJoined], connections_data["data"])}
+        query = query.where(Connection.smart_hardware_id == smart_hardware_id)
+    result = await db.execute(query)
+    connections = result.scalars().all()
+    # Get total count for pagination
+    count_query = select(func.count()).select_from(Connection).where(Connection.is_deleted == False)
+    if smart_hardware_id:
+        count_query = count_query.where(Connection.smart_hardware_id == smart_hardware_id)
+    total_count = await db.scalar(count_query)
+    response: dict[str, List[ConnectionReadJoined] | int] = {"data": connections, "total_count": total_count, "page": page, "items_per_page": items_per_page}
     return response
 
 

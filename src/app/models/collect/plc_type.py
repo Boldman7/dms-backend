@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, String, Integer, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ...core.db.database import Base
 
@@ -15,6 +15,7 @@ class PlcType(Base):
     controller_id: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     controller_name: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     interface_type: Mapped[int | None] = mapped_column(Integer, nullable=True, default=None)
+    connections = relationship("Connection", back_populates="plc_type")
     
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
 
