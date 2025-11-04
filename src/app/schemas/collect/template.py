@@ -28,6 +28,7 @@ class TemplateReadJoined(TemplateBase):
     id: int
     smart_hardware_type_id: int
     smart_hardware_type: SmartHardwareTypeRead
+    connection_count: int = 0
 
     update_user: int | None
     created_at: datetime

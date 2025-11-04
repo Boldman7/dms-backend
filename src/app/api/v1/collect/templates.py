@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ....core.db.database import async_get_db
 from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
 from ....crud.collect.crud_templates import crud_templates
+from ....crud.collect.crud_template_connections import crud_template_connections
 from ....schemas.collect.template import TemplateCreate, TemplateCreateInternal, TemplateRead, TemplateReadJoined, TemplateUpdate, TemplateCopy, TemplateCopyInternal
 from ....schemas.collect.smart_hardware_type import SmartHardwareTypeRead
 from ....models.collect.smart_hardware_type import SmartHardwareType
@@ -66,7 +67,40 @@ async def read_templates(
         is_deleted=False,
     )
 
-    response: dict[str, Any] = paginated_response(crud_data=templates_data, page=page, items_per_page=items_per_page)
+    # Extract templates and total_count from the dictionary
+    templates = templates_data['data']
+    total_count = templates_data['total_count']
+
+    # Get template IDs from the current page
+    template_ids = [template['id'] for template in templates]
+    
+    # Count connections for each template using the built-in count method
+    connection_counts = {}
+    for template_id in template_ids:
+        count = await crud_template_connections.count(
+            db=db,
+            template_id=template_id,
+            is_deleted=False
+        )
+        connection_counts[template_id] = count
+
+    # Add connection_count to each template dictionary and convert to TemplateReadJoined
+    updated_templates = []
+    for template in templates:
+        # Since template is already a dictionary, just add the connection_count
+        template['connection_count'] = connection_counts.get(template['id'], 0)
+        print(f"tempate: {template}")
+        # Convert the dictionary to TemplateReadJoined object
+        updated_templates.append(TemplateReadJoined(**template))
+    
+    # Reconstruct the data in the expected format
+    final_data = {
+        'data': updated_templates,
+        'total_count': total_count
+    }
+
+    response: dict[str, Any] = paginated_response(crud_data=final_data, page=page, items_per_page=items_per_page)
+    # response: dict[str, Any] = paginated_response(crud_data=templates_data, page=page, items_per_page=items_per_page)
     return response
 
 
