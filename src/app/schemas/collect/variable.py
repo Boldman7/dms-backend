@@ -16,6 +16,7 @@ class VariableBase(BaseModel):
     unit: Annotated[str | None, Field(examples=["variable unit"])]
     description: Annotated[str | None, Field(examples=["variable description"])]
     group_id: int
+    connection_id: Annotated[int, Field(examples=[1])]
 
 
 class Variable(TimestampSchema, VariableBase, UUIDSchema, PersistentDeletion):
@@ -24,6 +25,7 @@ class Variable(TimestampSchema, VariableBase, UUIDSchema, PersistentDeletion):
 
 class VariableRead(VariableBase):
     id: int
+    connection_id: int
     group: GroupRead
     
     update_user: int | None
