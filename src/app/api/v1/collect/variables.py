@@ -1,17 +1,18 @@
 from typing import Annotated, Any, cast
+from datetime import datetime, UTC
 
-from fastapi import APIRouter, Depends, Request, Query
+from fastapi import APIRouter, Depends, Request, Query, Path
 from fastcrud.paginated import PaginatedListResponse, compute_offset, paginated_response
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import update
 
 from ....core.db.database import async_get_db
-from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
+from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException, BadRequestException
 from ....crud.collect.crud_variables import crud_variables
 from ....schemas.collect.variable import VariableCreate, VariableCreateInternal, VariableRead, VariableUpdate
 from ....schemas.collect.group import GroupRead
 from ....models.collect.group import Group
-from ....models.collect.template_connection import TemplateConnection
-from ....schemas.collect.template_connection import TemplateConnectionRead
+from ....models.collect.variable import Variable
 
 router = APIRouter(tags=["variables"])
 
@@ -134,3 +135,41 @@ async def erase_variable(request: Request, id: int, db: Annotated[AsyncSession, 
 
     await crud_variables.delete(db=db, id=id)
     return {"message": "Variable deleted"}
+
+@router.delete("/variables/connection/{connection_id}")
+async def delete_variables(
+    db: Annotated[AsyncSession, Depends(async_get_db)], 
+    connection_id: int = Path(..., gt=0),
+) -> dict[str, str]:
+    if not connection_id:
+        raise BadRequestException(
+            status_code=400,
+            detail="need connection id",
+        )
+    
+    print("delete_variables", connection_id);
+    # Check if any active variables exist with this connection_id
+    variables = await crud_variables.get_multi(
+        db=db, 
+        connection_id=connection_id,
+        is_deleted=False
+    )
+    variables_data = variables['data']
+
+    print("delete_variables", variables_data);
+    if not variables:
+        raise NotFoundException("Variable not found")
+
+    print("delete_variables: before delete");
+    # Delete each variable individually
+    deleted_count = 0
+    for variable in variables_data:
+        await crud_variables.delete(db=db, id=variable["id"])
+        deleted_count += 1
+    
+    print("delete_variables: after delete", deleted_count);
+
+    return {
+        "message": f"Successfully deleted {deleted_count} variables",
+    }
+
