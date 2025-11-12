@@ -15,7 +15,7 @@ class Variable(Base):
     address: Mapped[str] = mapped_column(String, nullable=False)
     transmission_mode: Mapped[int] = mapped_column(Integer, nullable=False)
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), index=True, nullable=False)
-    connection_id: Mapped[int] = mapped_column(ForeignKey("connection.id"), index=True, nullable=False)
+    connection_id: Mapped[int] = mapped_column(ForeignKey("template_connection.id"), index=True, nullable=False)
     rw_mode: Mapped[int] = mapped_column(Integer, nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True, default=None)
     description: Mapped[str | None] = mapped_column(String, nullable=True, default=None)

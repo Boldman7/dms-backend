@@ -10,6 +10,8 @@ from ....crud.collect.crud_variables import crud_variables
 from ....schemas.collect.variable import VariableCreate, VariableCreateInternal, VariableRead, VariableUpdate
 from ....schemas.collect.group import GroupRead
 from ....models.collect.group import Group
+from ....models.collect.template_connection import TemplateConnection
+from ....schemas.collect.template_connection import TemplateConnectionRead
 
 router = APIRouter(tags=["variables"])
 
@@ -49,10 +51,12 @@ async def write_variable(
 async def read_variables(
     db: Annotated[AsyncSession, Depends(async_get_db)],
     name: str = Query(""),
+    connection_id: int | None = Query(None),
     group_id: int | None = Query(None),
     page: int | None = Query(1),
     items_per_page: int | None = Query(10)
 ) -> dict:
+
     if group_id:
         variables_data = await crud_variables.get_multi_joined(
             db=db,
@@ -64,6 +68,7 @@ async def read_variables(
             limit=items_per_page,
             name__contains=name,
             group_id=group_id,
+            connection_id = connection_id,
             is_deleted=False,
         )
     else:
@@ -76,6 +81,7 @@ async def read_variables(
             offset=compute_offset(page, items_per_page),
             limit=items_per_page,
             name__contains=name,
+            connection_id = connection_id,
             is_deleted=False,
         )
 

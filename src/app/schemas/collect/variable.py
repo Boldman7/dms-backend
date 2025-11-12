@@ -25,7 +25,6 @@ class Variable(TimestampSchema, VariableBase, UUIDSchema, PersistentDeletion):
 
 class VariableRead(VariableBase):
     id: int
-    connection_id: int
     group: GroupRead
     
     update_user: int | None
