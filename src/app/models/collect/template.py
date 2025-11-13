@@ -16,7 +16,7 @@ class Template(Base):
     update_user: Mapped[int | None] = mapped_column(ForeignKey("user.id"), index=True, nullable=True, default=None)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default_factory=lambda: datetime.now(UTC))
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default_factory=lambda: datetime.now(UTC))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), default=None)
 
     is_deleted: Mapped[bool] = mapped_column(default=False, index=True)

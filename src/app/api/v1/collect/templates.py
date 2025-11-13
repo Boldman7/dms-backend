@@ -6,7 +6,7 @@ from fastcrud.paginated import PaginatedListResponse, compute_offset, paginated_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....core.db.database import async_get_db
-from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException
+from ....core.exceptions.http_exceptions import DuplicateValueException, NotFoundException, BadRequestException
 from ....crud.collect.crud_templates import crud_templates
 from ....crud.collect.crud_template_connections import crud_template_connections
 from ....schemas.collect.template import TemplateCreate, TemplateCreateInternal, TemplateRead, TemplateReadJoined, TemplateUpdate, TemplateCopy, TemplateCopyInternal
@@ -53,8 +53,19 @@ async def read_templates(
     db: Annotated[AsyncSession, Depends(async_get_db)],
     name: str = Query(""),
     page: int | None = Query(1),
-    items_per_page: int | None = Query(10)
+    items_per_page: int | None = Query(10), 
+    sort: str = Query("desc", description="Sort order: 'asc' or 'desc'"),
+    sort_by: str = Query("updated_at", description="Field to sort by"),
 ) -> dict:
+    
+    if sort not in ["asc", "desc"]:
+        return BadRequestException("sort must be 'asc' or 'desc'");
+
+    # Validate sort_by field to prevent SQL injection
+    allowed_sort_fields = ["updated_at", "created_at", "name", "id"]
+    if sort_by not in allowed_sort_fields:
+        return BadRequestException(f"sort_by must be one of: {', '.join(allowed_sort_fields)}")
+
     templates_data = await crud_templates.get_multi_joined(
         db=db,
         join_model=SmartHardwareType,
@@ -65,6 +76,8 @@ async def read_templates(
         limit=items_per_page,
         name__contains=name,
         is_deleted=False,
+        sort_columns=sort_by,
+        sort_orders=sort,
     )
 
     # Extract templates and total_count from the dictionary
@@ -89,7 +102,6 @@ async def read_templates(
     for template in templates:
         # Since template is already a dictionary, just add the connection_count
         template['connection_count'] = connection_counts.get(template['id'], 0)
-        print(f"tempate: {template}")
         # Convert the dictionary to TemplateReadJoined object
         updated_templates.append(TemplateReadJoined(**template))
     
@@ -100,7 +112,6 @@ async def read_templates(
     }
 
     response: dict[str, Any] = paginated_response(crud_data=final_data, page=page, items_per_page=items_per_page)
-    # response: dict[str, Any] = paginated_response(crud_data=templates_data, page=page, items_per_page=items_per_page)
     return response
 
 
